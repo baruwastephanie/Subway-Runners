@@ -8,7 +8,7 @@ import Game from './components/Game';
 import UI from './components/UI';
 
 export default function App() {
-  const [showSplash, setShowSplash] = useState(true);
+  const [appPhase, setAppPhase] = useState<'splash' | 'loading' | 'game'>('splash');
   const [coins, setCoins] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -17,10 +17,17 @@ export default function App() {
   const [resetKey, setResetKey] = useState(0);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowSplash(false);
+    let loadingTimer: ReturnType<typeof setTimeout>;
+    const splashTimer = setTimeout(() => {
+      setAppPhase('loading');
+      loadingTimer = setTimeout(() => {
+        setAppPhase('game');
+      }, 5000);
     }, 3000);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(splashTimer);
+      if (loadingTimer) clearTimeout(loadingTimer);
+    };
   }, []);
 
   const resetGame = () => {
@@ -33,7 +40,7 @@ export default function App() {
 
   return (
     <div className="w-screen h-screen relative overflow-hidden bg-sky-300 touch-none">
-      {showSplash && (
+      {appPhase === 'splash' && (
         <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black">
           <img 
             src="https://i.postimg.cc/BbkfgcmG/Chat-GPT-Image-Aug-23-2026-05-49-25-AM.png" 
@@ -43,14 +50,24 @@ export default function App() {
           />
         </div>
       )}
+      {appPhase === 'loading' && (
+        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black">
+          <img 
+            src="https://i.postimg.cc/HxQrFzJW/Chat-GPT-Image-Aug-26-2026-02-19-08-PM.png" 
+            alt="Loading Screen" 
+            className="w-full h-full object-cover" 
+            referrerPolicy="no-referrer"
+          />
+        </div>
+      )}
       <Game 
         key={resetKey}
-        isPaused={isPaused || gameOver || showSplash} 
+        isPaused={isPaused || gameOver || appPhase !== 'game'} 
         onGameOver={() => setGameOver(true)} 
         onCoinCollect={() => setCoins(c => c + 1)}
         onScoreUpdate={(s) => setScore(s)}
       />
-      {!showSplash && (
+      {appPhase === 'game' && (
         <UI 
           coins={coins} 
           score={score}
