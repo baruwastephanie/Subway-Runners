@@ -6,22 +6,31 @@
 import React, { useState, useEffect } from 'react';
 import Game from './components/Game';
 import UI from './components/UI';
+import HomeScreen from './components/HomeScreen';
 
 export default function App() {
-  const [appPhase, setAppPhase] = useState<'splash' | 'loading' | 'game'>('splash');
+  const [appPhase, setAppPhase] = useState<'splash' | 'loading' | 'home' | 'game'>('splash');
   const [coins, setCoins] = useState(0);
+  const [totalCoins, setTotalCoins] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(0);
 
   const [resetKey, setResetKey] = useState(0);
 
   useEffect(() => {
+    // Load from local storage
+    const savedCoins = localStorage.getItem('totalCoins');
+    const savedScore = localStorage.getItem('highScore');
+    if (savedCoins) setTotalCoins(parseInt(savedCoins, 10));
+    if (savedScore) setHighScore(parseInt(savedScore, 10));
+
     let loadingTimer: ReturnType<typeof setTimeout>;
     const splashTimer = setTimeout(() => {
       setAppPhase('loading');
       loadingTimer = setTimeout(() => {
-        setAppPhase('game');
+        setAppPhase('home');
       }, 5000);
     }, 3000);
     return () => {
@@ -36,6 +45,20 @@ export default function App() {
     setGameOver(false);
     setIsPaused(false);
     setResetKey(k => k + 1);
+  };
+
+  const handleGameOver = () => {
+    setGameOver(true);
+    
+    // Update high score
+    const newHighScore = Math.max(Math.floor(score), highScore);
+    setHighScore(newHighScore);
+    localStorage.setItem('highScore', newHighScore.toString());
+    
+    // Update total coins
+    const newTotalCoins = totalCoins + coins;
+    setTotalCoins(newTotalCoins);
+    localStorage.setItem('totalCoins', newTotalCoins.toString());
   };
 
   return (
@@ -60,10 +83,20 @@ export default function App() {
           />
         </div>
       )}
+      {appPhase === 'home' && (
+        <HomeScreen 
+          totalCoins={totalCoins} 
+          highScore={highScore} 
+          onPlay={() => {
+            resetGame();
+            setAppPhase('game');
+          }} 
+        />
+      )}
       <Game 
         key={resetKey}
         isPaused={isPaused || gameOver || appPhase !== 'game'} 
-        onGameOver={() => setGameOver(true)} 
+        onGameOver={handleGameOver} 
         onCoinCollect={() => setCoins(c => c + 1)}
         onScoreUpdate={(s) => setScore(s)}
       />
