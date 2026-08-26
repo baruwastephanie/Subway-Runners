@@ -1,0 +1,54 @@
+--- src/components/Obstacles.tsx
++++ src/components/Obstacles.tsx
+@@ -79,7 +79,8 @@
+     timeSinceLastSpawn.current += delta;
+     
+     // Spawn logic based on speed (spawn more frequently as speed increases)
+     const spawnRate = Math.max(0.5, 15 / speed);
++    let changed = false;
+     if (timeSinceLastSpawn.current > spawnRate) {
+       const newEnts = spawnEntity();
+       entitiesRef.current.push(...newEnts);
+       timeSinceLastSpawn.current = 0;
++      changed = true;
+     }
+ 
+     const remaining: Entity[] = [];
+@@ -99,6 +100,7 @@
+ 
+       // Despawn if past camera
+       if (entity.z > DESPAWN_Z) {
++        changed = true;
+         continue; // Don't add to remaining
+       }
+ 
+@@ -107,6 +109,7 @@
+         if (entity.type === 'coin') {
+           entity.collected = true;
+           newlyCollected++;
++          changed = true;
+           continue; // Will be removed visually next frame
+         } else if (entity.type === 'slide' && playerState.current.isSliding) {
+           // Player successfully slid under the barrier!
+@@ -131,7 +134,9 @@
+     }
+ 
+     entitiesRef.current = remaining;
+-    setEntities([...remaining]); // Shallow clone to trigger re-render
++    if (changed) {
++      setEntities([...remaining]);
++    }
+   });
+ 
+   return (
+@@ -305,6 +310,10 @@
+   
+   useFrame((_, delta) => {
+     if (meshRef.current) {
++      if (entity.collected) {
++        meshRef.current.visible = false;
++        return;
++      }
+       meshRef.current.position.z = entity.z;
+       meshRef.current.rotation.y += delta * 3;
+       entity.box.setFromObject(meshRef.current);

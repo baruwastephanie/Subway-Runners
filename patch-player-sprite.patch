@@ -1,0 +1,56 @@
+--- src/components/Player.tsx
++++ src/components/Player.tsx
+@@ -1,4 +1,4 @@
+-import React, { useEffect, useRef } from 'react';
++import React, { useEffect, useRef, useState, useMemo } from 'react';
+ import { useFrame } from '@react-three/fiber';
+ import * as THREE from 'three';
+ 
+@@ -37,6 +37,42 @@
+   const hairRef = useRef<THREE.Group>(null);
+   const characterGroupRef = useRef<THREE.Group>(null);
+   const clockRef = useRef(0);
++  
++  const [texture, setTexture] = useState<THREE.Texture | null>(null);
++  useEffect(() => {
++    const loader = new THREE.TextureLoader();
++    loader.load('/src/assets/images/santa_runner_green_1787742096811.jpg', (tex) => {
++      tex.colorSpace = THREE.SRGBColorSpace;
++      setTexture(tex);
++    });
++  }, []);
++
++  const chromaKeyMaterial = useMemo(() => {
++    if (!texture) return null;
++    return new THREE.ShaderMaterial({
++      uniforms: {
++        map: { value: texture },
++        keyColor: { value: new THREE.Color(0x00ff00) },
++        threshold: { value: 0.4 },
++      },
++      vertexShader: `
++        varying vec2 vUv;
++        void main() {
++          vUv = uv;
++          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
++        }
++      `,
++      fragmentShader: `
++        uniform sampler2D map;
++        uniform vec3 keyColor;
++        uniform float threshold;
++        varying vec2 vUv;
++        void main() {
++          vec4 color = texture2D(map, vUv);
++          float diff = length(color.rgb - keyColor);
++          if (diff < threshold) discard;
++          gl_FragColor = color;
++        }
++      `,
++      transparent: true,
++      side: THREE.DoubleSide,
++    });
++  }, [texture]);
+ 
+   useEffect(() => {
+     const handleKeyDown = (e: KeyboardEvent) => {

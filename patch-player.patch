@@ -1,0 +1,357 @@
+--- src/components/Player.tsx
++++ src/components/Player.tsx
+@@ -26,11 +26,18 @@
+   // Animation refs
+   const leftLegRef = useRef<THREE.Group>(null);
+   const rightLegRef = useRef<THREE.Group>(null);
++  const leftCalfRef = useRef<THREE.Group>(null);
++  const rightCalfRef = useRef<THREE.Group>(null);
+   const leftArmRef = useRef<THREE.Group>(null);
+   const rightArmRef = useRef<THREE.Group>(null);
++  const leftForearmRef = useRef<THREE.Group>(null);
++  const rightForearmRef = useRef<THREE.Group>(null);
+   const bodyRef = useRef<THREE.Group>(null);
++  const hairRef = useRef<THREE.Group>(null);
++  const characterGroupRef = useRef<THREE.Group>(null);
+   const clockRef = useRef(0);
+ 
+   useEffect(() => {
+@@ -194,32 +201,48 @@
+     }
+ 
+     // Animation: Legs and Arms
+-    if (leftLegRef.current && rightLegRef.current && leftArmRef.current && rightArmRef.current && bodyRef.current) {
++    if (leftLegRef.current && rightLegRef.current && leftArmRef.current && rightArmRef.current && bodyRef.current && characterGroupRef.current) {
+       if (state.isJumping) {
+         // Jump pose
+-        leftLegRef.current.rotation.x = THREE.MathUtils.lerp(leftLegRef.current.rotation.x, -0.5, 10 * delta);
++        leftLegRef.current.rotation.x = THREE.MathUtils.lerp(leftLegRef.current.rotation.x, -0.8, 10 * delta);
+-        rightLegRef.current.rotation.x = THREE.MathUtils.lerp(rightLegRef.current.rotation.x, 0.2, 10 * delta);
+-        leftArmRef.current.rotation.x = THREE.MathUtils.lerp(leftArmRef.current.rotation.x, Math.PI, 10 * delta); // arms up
++        rightLegRef.current.rotation.x = THREE.MathUtils.lerp(rightLegRef.current.rotation.x, -0.2, 10 * delta);
++        if (leftCalfRef.current) leftCalfRef.current.rotation.x = 0;
++        if (rightCalfRef.current) rightCalfRef.current.rotation.x = 0.5;
++        leftArmRef.current.rotation.x = THREE.MathUtils.lerp(leftArmRef.current.rotation.x, Math.PI - 0.5, 10 * delta); // arms up
+-        rightArmRef.current.rotation.x = THREE.MathUtils.lerp(rightArmRef.current.rotation.x, Math.PI, 10 * delta);
++        rightArmRef.current.rotation.x = THREE.MathUtils.lerp(rightArmRef.current.rotation.x, Math.PI - 0.5, 10 * delta);
+         bodyRef.current.rotation.y = 0;
++        characterGroupRef.current.position.y = 0;
+       } else if (state.isSliding) {
+         // Slide pose (handled mostly by scale/rotation above, but tuck limbs)
+-        leftLegRef.current.rotation.x = THREE.MathUtils.lerp(leftLegRef.current.rotation.x, 0, 10 * delta);
+-        rightLegRef.current.rotation.x = THREE.MathUtils.lerp(rightLegRef.current.rotation.x, 0, 10 * delta);
+-        leftArmRef.current.rotation.x = THREE.MathUtils.lerp(leftArmRef.current.rotation.x, 0, 10 * delta);
+-        rightArmRef.current.rotation.x = THREE.MathUtils.lerp(rightArmRef.current.rotation.x, 0, 10 * delta);
++        leftLegRef.current.rotation.x = THREE.MathUtils.lerp(leftLegRef.current.rotation.x, -Math.PI / 2 + 0.2, 10 * delta);
++        rightLegRef.current.rotation.x = THREE.MathUtils.lerp(rightLegRef.current.rotation.x, -Math.PI / 2 + 0.2, 10 * delta);
++        leftArmRef.current.rotation.x = THREE.MathUtils.lerp(leftArmRef.current.rotation.x, -Math.PI / 2, 10 * delta);
++        rightArmRef.current.rotation.x = THREE.MathUtils.lerp(rightArmRef.current.rotation.x, -Math.PI / 2, 10 * delta);
++        if (leftCalfRef.current) leftCalfRef.current.rotation.x = 0;
++        if (rightCalfRef.current) rightCalfRef.current.rotation.x = 0;
+       } else {
+         // Running animation
+-        const runCycle = Math.sin(clockRef.current);
+-        leftLegRef.current.rotation.x = runCycle * 0.8;
+-        rightLegRef.current.rotation.x = -runCycle * 0.8;
++        const runSpeed = 1.8;
++        const runCycle = Math.sin(clockRef.current * runSpeed);
++        const runCycleCos = Math.cos(clockRef.current * runSpeed);
++        
++        leftLegRef.current.rotation.x = runCycle * 0.7;
++        rightLegRef.current.rotation.x = -runCycle * 0.7;
+         
+-        leftArmRef.current.rotation.x = -runCycle * 0.8;
+-        rightArmRef.current.rotation.x = runCycle * 0.8;
++        if (leftCalfRef.current) leftCalfRef.current.rotation.x = Math.max(0, -runCycle * 1.5);
++        if (rightCalfRef.current) rightCalfRef.current.rotation.x = Math.max(0, runCycle * 1.5);
++        
++        leftArmRef.current.rotation.x = -runCycle * 0.6;
++        rightArmRef.current.rotation.x = runCycle * 0.6;
+         
+         // Slight body twist
+         bodyRef.current.rotation.y = Math.sin(clockRef.current) * 0.1;
++        
++        // Body bounce
++        characterGroupRef.current.position.y = Math.abs(runCycleCos) * 0.15;
++        
++        // Hair bounce
++        if (hairRef.current) {
++          hairRef.current.rotation.x = 0.2 + Math.abs(runCycleCos) * 0.15;
++          hairRef.current.rotation.z = -runCycle * 0.1;
++        }
+       }
+     }
+@@ -237,133 +260,166 @@
+ 
+   return (
+     <group ref={playerRef} position={[0, 0, 0]}>
+-      {/* 3D Character Model (Animated Santa Girl) */}
+-      
++      <group ref={characterGroupRef}>
+-      {/* Body Wrapper for twisting */}
+-      <group ref={bodyRef}>
+-        {/* Coat Top (Red) */}
+-        <mesh position={[0, 0.9, 0]} castShadow>
+-          <cylinderGeometry args={[0.2, 0.28, 0.4, 16]} />
+-          <meshStandardMaterial color="#d92727" />
+-        </mesh>
+-        
+-        {/* Belt (Black) */}
+-        <mesh position={[0, 0.7, 0]} castShadow>
+-          <cylinderGeometry args={[0.29, 0.29, 0.1, 16]} />
+-          <meshStandardMaterial color="#111" />
+-        </mesh>
+-
+-        {/* Belt Buckle (Gold) */}
+-        <mesh position={[0, 0.7, 0.26]} castShadow>
+-          <boxGeometry args={[0.12, 0.12, 0.05]} />
+-          <meshStandardMaterial color="#eab308" />
+-        </mesh>
+-
+-        {/* Coat Bottom (Red) */}
+-        <mesh position={[0, 0.5, 0]} castShadow>
+-          <cylinderGeometry args={[0.28, 0.4, 0.3, 16]} />
+-          <meshStandardMaterial color="#d92727" />
+-        </mesh>
+-        
+-        {/* White Trim Bottom */}
+-        <mesh position={[0, 0.3, 0]} castShadow>
+-          <cylinderGeometry args={[0.42, 0.42, 0.12, 16]} />
+-          <meshStandardMaterial color="white" />
+-        </mesh>
+-
+-        {/* Head Base (Face) */}
+-        <mesh position={[0, 1.3, 0]} castShadow>
+-          <sphereGeometry args={[0.22, 16, 16]} />
+-          <meshStandardMaterial color="#f1c27d" />
+-        </mesh>
+-
+-        {/* Hair Base */}
+-        <mesh position={[0, 1.3, -0.05]} castShadow>
+-          <sphereGeometry args={[0.24, 16, 16, 0, Math.PI * 2, 0, Math.PI / 1.5]} />
+-          <meshStandardMaterial color="#4a2f1d" />
+-        </mesh>
+-        
+-        {/* Flowing Back Hair */}
+-        <mesh position={[0, 0.9, -0.2]} rotation={[0.2, 0, 0]} castShadow>
+-          <capsuleGeometry args={[0.18, 0.4, 8, 16]} />
+-          <meshStandardMaterial color="#4a2f1d" />
+-        </mesh>
+-
+-        {/* Hat Trim (White) */}
+-        <mesh position={[0, 1.48, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+-          <torusGeometry args={[0.2, 0.06, 16, 32]} />
+-          <meshStandardMaterial color="white" />
+-        </mesh>
+-
+-        {/* Hat Cone (Red) */}
+-        <mesh position={[0, 1.65, -0.05]} rotation={[-0.3, 0, -0.1]} castShadow>
+-          <coneGeometry args={[0.18, 0.4, 16]} />
+-          <meshStandardMaterial color="#d92727" />
+-        </mesh>
+-
+-        {/* Hat Pom Pom (White) */}
+-        <mesh position={[0.05, 1.85, -0.15]} castShadow>
+-          <sphereGeometry args={[0.08, 16, 16]} />
+-          <meshStandardMaterial color="white" />
+-        </mesh>
+-
+-        {/* Left Arm */}
+-        <group position={[-0.32, 1.05, 0]} ref={leftArmRef}>
+-          <mesh position={[0, -0.15, 0]} castShadow>
+-            <capsuleGeometry args={[0.06, 0.25, 8, 8]} />
+-            <meshStandardMaterial color="#d92727" />
+-          </mesh>
+-          <mesh position={[0, -0.35, 0]} castShadow>
+-            <cylinderGeometry args={[0.08, 0.08, 0.1, 8]} />
+-            <meshStandardMaterial color="white" />
+-          </mesh>
+-          <mesh position={[0, -0.45, 0]} castShadow>
+-            <sphereGeometry args={[0.07, 8, 8]} />
+-            <meshStandardMaterial color="#f1c27d" />
+-          </mesh>
+-        </group>
+-
+-        {/* Right Arm */}
+-        <group position={[0.32, 1.05, 0]} ref={rightArmRef}>
+-          <mesh position={[0, -0.15, 0]} castShadow>
+-            <capsuleGeometry args={[0.06, 0.25, 8, 8]} />
+-            <meshStandardMaterial color="#d92727" />
+-          </mesh>
+-          <mesh position={[0, -0.35, 0]} castShadow>
+-            <cylinderGeometry args={[0.08, 0.08, 0.1, 8]} />
+-            <meshStandardMaterial color="white" />
+-          </mesh>
+-          <mesh position={[0, -0.45, 0]} castShadow>
+-            <sphereGeometry args={[0.07, 8, 8]} />
+-            <meshStandardMaterial color="#f1c27d" />
+-          </mesh>
+-        </group>
+-      </group>
+-
+-      {/* Left Leg (Striped) */}
+-      <group position={[-0.15, 0.35, 0]} ref={leftLegRef}>
+-        <mesh position={[0, -0.05, 0]} castShadow><cylinderGeometry args={[0.07, 0.07, 0.1, 8]} /><meshStandardMaterial color="#d92727" /></mesh>
+-        <mesh position={[0, -0.15, 0]} castShadow><cylinderGeometry args={[0.07, 0.07, 0.1, 8]} /><meshStandardMaterial color="white" /></mesh>
+-        <mesh position={[0, -0.25, 0]} castShadow><cylinderGeometry args={[0.07, 0.07, 0.1, 8]} /><meshStandardMaterial color="#d92727" /></mesh>
+-        <mesh position={[0, -0.35, 0]} castShadow><cylinderGeometry args={[0.07, 0.07, 0.1, 8]} /><meshStandardMaterial color="white" /></mesh>
+-        <mesh position={[0, -0.45, 0]} castShadow><cylinderGeometry args={[0.07, 0.07, 0.1, 8]} /><meshStandardMaterial color="#d92727" /></mesh>
+-        {/* Shoe */}
+-        <mesh position={[0, -0.55, 0.05]} castShadow><boxGeometry args={[0.14, 0.1, 0.22]} /><meshStandardMaterial color="#555" /></mesh>
+-        <mesh position={[0, -0.62, 0.05]} castShadow><boxGeometry args={[0.15, 0.04, 0.24]} /><meshStandardMaterial color="white" /></mesh>
+-      </group>
+-
+-      {/* Right Leg (Striped) */}
+-      <group position={[0.15, 0.35, 0]} ref={rightLegRef}>
+-        <mesh position={[0, -0.05, 0]} castShadow><cylinderGeometry args={[0.07, 0.07, 0.1, 8]} /><meshStandardMaterial color="#d92727" /></mesh>
+-        <mesh position={[0, -0.15, 0]} castShadow><cylinderGeometry args={[0.07, 0.07, 0.1, 8]} /><meshStandardMaterial color="white" /></mesh>
+-        <mesh position={[0, -0.25, 0]} castShadow><cylinderGeometry args={[0.07, 0.07, 0.1, 8]} /><meshStandardMaterial color="#d92727" /></mesh>
+-        <mesh position={[0, -0.35, 0]} castShadow><cylinderGeometry args={[0.07, 0.07, 0.1, 8]} /><meshStandardMaterial color="white" /></mesh>
+-        <mesh position={[0, -0.45, 0]} castShadow><cylinderGeometry args={[0.07, 0.07, 0.1, 8]} /><meshStandardMaterial color="#d92727" /></mesh>
+-        {/* Shoe */}
+-        <mesh position={[0, -0.55, 0.05]} castShadow><boxGeometry args={[0.14, 0.1, 0.22]} /><meshStandardMaterial color="#555" /></mesh>
+-        <mesh position={[0, -0.62, 0.05]} castShadow><boxGeometry args={[0.15, 0.04, 0.24]} /><meshStandardMaterial color="white" /></mesh>
+-      </group>
++        <group ref={bodyRef}>
++          {/* Torso Base */}
++          <mesh position={[0, 0.9, 0]} castShadow>
++            <capsuleGeometry args={[0.18, 0.35, 16, 16]} />
++            <meshStandardMaterial color="#cc1d1d" roughness={0.7} />
++          </mesh>
++          
++          {/* Belt */}
++          <mesh position={[0, 0.72, 0]} castShadow>
++            <cylinderGeometry args={[0.19, 0.19, 0.12, 16]} />
++            <meshStandardMaterial color="#1a1a1a" roughness={0.6} />
++          </mesh>
++          <mesh position={[0, 0.72, 0.17]} castShadow>
++            <boxGeometry args={[0.14, 0.14, 0.06]} />
++            <meshStandardMaterial color="#d4af37" metalness={0.8} roughness={0.2} />
++          </mesh>
++
++          {/* Skirt / Coat Bottom */}
++          <mesh position={[0, 0.52, 0]} castShadow>
++            <coneGeometry args={[0.35, 0.35, 32, 1, true]} />
++            <meshStandardMaterial color="#cc1d1d" roughness={0.7} side={THREE.DoubleSide} />
++          </mesh>
++          <mesh position={[0, 0.35, 0]} castShadow>
++            <torusGeometry args={[0.34, 0.07, 16, 32]} />
++            <meshStandardMaterial color="#ffffff" roughness={0.9} />
++          </mesh>
++
++          {/* Head & Neck */}
++          <mesh position={[0, 1.25, 0]} castShadow>
++            <sphereGeometry args={[0.18, 32, 32]} />
++            <meshStandardMaterial color="#fcd8ba" roughness={0.4} />
++          </mesh>
++          
++          {/* Hair */}
++          <group ref={hairRef} position={[0, 1.25, -0.05]}>
++            {/* Hair Cap */}
++            <mesh castShadow>
++              <sphereGeometry args={[0.19, 32, 32, 0, Math.PI * 2, 0, Math.PI / 1.5]} />
++              <meshStandardMaterial color="#4a2f1d" roughness={0.8} />
++            </mesh>
++            {/* Ponytail / Back Hair */}
++            <mesh position={[0, -0.25, -0.15]} rotation={[0.2, 0, 0]} castShadow>
++              <capsuleGeometry args={[0.14, 0.4, 16, 16]} />
++              <meshStandardMaterial color="#4a2f1d" roughness={0.8} />
++            </mesh>
++          </group>
++
++          {/* Hat */}
++          <group position={[0, 1.38, 0]}>
++            <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
++              <torusGeometry args={[0.17, 0.06, 16, 32]} />
++              <meshStandardMaterial color="#ffffff" roughness={0.9} />
++            </mesh>
++            <mesh position={[0, 0.18, -0.05]} rotation={[-0.2, 0, 0]} castShadow>
++              <coneGeometry args={[0.16, 0.4, 32]} />
++              <meshStandardMaterial color="#cc1d1d" roughness={0.7} />
++            </mesh>
++            <mesh position={[0, 0.38, -0.15]} castShadow>
++              <sphereGeometry args={[0.07, 16, 16]} />
++              <meshStandardMaterial color="#ffffff" roughness={0.9} />
++            </mesh>
++          </group>
++
++          {/* Left Arm (Jointed) */}
++          <group position={[-0.24, 1.05, 0]} ref={leftArmRef}>
++            {/* Shoulder to Elbow */}
++            <mesh position={[-0.02, -0.12, 0]} rotation={[0, 0, 0.2]} castShadow>
++              <capsuleGeometry args={[0.05, 0.18, 16, 16]} />
++              <meshStandardMaterial color="#cc1d1d" roughness={0.7} />
++            </mesh>
++            <group position={[-0.05, -0.26, 0]} ref={leftForearmRef} rotation={[-0.2, 0, 0]}>
++              <mesh position={[0, -0.08, 0]} castShadow>
++                <capsuleGeometry args={[0.045, 0.15, 16, 16]} />
++                <meshStandardMaterial color="#cc1d1d" roughness={0.7} />
++              </mesh>
++              <mesh position={[0, -0.18, 0]} castShadow>
++                <sphereGeometry args={[0.055, 16, 16]} />
++                <meshStandardMaterial color="#ffffff" roughness={0.9} />
++              </mesh>
++              <mesh position={[0, -0.24, 0]} castShadow>
++                <sphereGeometry args={[0.045, 16, 16]} />
++                <meshStandardMaterial color="#fcd8ba" roughness={0.4} />
++              </mesh>
++            </group>
++          </group>
++
++          {/* Right Arm (Jointed) */}
++          <group position={[0.24, 1.05, 0]} ref={rightArmRef}>
++            {/* Shoulder to Elbow */}
++            <mesh position={[0.02, -0.12, 0]} rotation={[0, 0, -0.2]} castShadow>
++              <capsuleGeometry args={[0.05, 0.18, 16, 16]} />
++              <meshStandardMaterial color="#cc1d1d" roughness={0.7} />
++            </mesh>
++            <group position={[0.05, -0.26, 0]} ref={rightForearmRef} rotation={[-0.2, 0, 0]}>
++              <mesh position={[0, -0.08, 0]} castShadow>
++                <capsuleGeometry args={[0.045, 0.15, 16, 16]} />
++                <meshStandardMaterial color="#cc1d1d" roughness={0.7} />
++              </mesh>
++              <mesh position={[0, -0.18, 0]} castShadow>
++                <sphereGeometry args={[0.055, 16, 16]} />
++                <meshStandardMaterial color="#ffffff" roughness={0.9} />
++              </mesh>
++              <mesh position={[0, -0.24, 0]} castShadow>
++                <sphereGeometry args={[0.045, 16, 16]} />
++                <meshStandardMaterial color="#fcd8ba" roughness={0.4} />
++              </mesh>
++            </group>
++          </group>
++        </group>
++
++        {/* Left Leg (Jointed & Striped) */}
++        <group position={[-0.12, 0.45, 0]} ref={leftLegRef}>
++          <mesh position={[0, -0.1, 0]} castShadow><cylinderGeometry args={[0.06, 0.055, 0.1, 16]} /><meshStandardMaterial color="#cc1d1d" /></mesh>
++          <mesh position={[0, -0.2, 0]} castShadow><cylinderGeometry args={[0.055, 0.05, 0.1, 16]} /><meshStandardMaterial color="#ffffff" /></mesh>
++          
++          <group position={[0, -0.25, 0]} ref={leftCalfRef}>
++            <mesh position={[0, -0.05, 0]} castShadow><cylinderGeometry args={[0.05, 0.045, 0.1, 16]} /><meshStandardMaterial color="#cc1d1d" /></mesh>
++            <mesh position={[0, -0.15, 0]} castShadow><cylinderGeometry args={[0.045, 0.04, 0.1, 16]} /><meshStandardMaterial color="#ffffff" /></mesh>
++            <mesh position={[0, -0.25, 0]} castShadow><cylinderGeometry args={[0.04, 0.04, 0.1, 16]} /><meshStandardMaterial color="#cc1d1d" /></mesh>
++            {/* Shoe */}
++            <mesh position={[0, -0.35, 0.04]} castShadow><capsuleGeometry args={[0.06, 0.12, 16, 16]} rotation={[Math.PI / 2, 0, 0]} /><meshStandardMaterial color="#555555" /></mesh>
++            <mesh position={[0, -0.4, 0.04]} castShadow><boxGeometry args={[0.13, 0.04, 0.25]} /><meshStandardMaterial color="#ffffff" /></mesh>
++          </group>
++        </group>
++
++        {/* Right Leg (Jointed & Striped) */}
++        <group position={[0.12, 0.45, 0]} ref={rightLegRef}>
++          <mesh position={[0, -0.1, 0]} castShadow><cylinderGeometry args={[0.06, 0.055, 0.1, 16]} /><meshStandardMaterial color="#cc1d1d" /></mesh>
++          <mesh position={[0, -0.2, 0]} castShadow><cylinderGeometry args={[0.055, 0.05, 0.1, 16]} /><meshStandardMaterial color="#ffffff" /></mesh>
++          
++          <group position={[0, -0.25, 0]} ref={rightCalfRef}>
++            <mesh position={[0, -0.05, 0]} castShadow><cylinderGeometry args={[0.05, 0.045, 0.1, 16]} /><meshStandardMaterial color="#cc1d1d" /></mesh>
++            <mesh position={[0, -0.15, 0]} castShadow><cylinderGeometry args={[0.045, 0.04, 0.1, 16]} /><meshStandardMaterial color="#ffffff" /></mesh>
++            <mesh position={[0, -0.25, 0]} castShadow><cylinderGeometry args={[0.04, 0.04, 0.1, 16]} /><meshStandardMaterial color="#cc1d1d" /></mesh>
++            {/* Shoe */}
++            <mesh position={[0, -0.35, 0.04]} castShadow><capsuleGeometry args={[0.06, 0.12, 16, 16]} rotation={[Math.PI / 2, 0, 0]} /><meshStandardMaterial color="#555555" /></mesh>
++            <mesh position={[0, -0.4, 0.04]} castShadow><boxGeometry args={[0.13, 0.04, 0.25]} /><meshStandardMaterial color="#ffffff" /></mesh>
++          </group>
++        </group>
++      </group>
+     </group>
+   );
+ }
