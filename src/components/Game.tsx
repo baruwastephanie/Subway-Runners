@@ -12,6 +12,7 @@ interface GameProps {
   isPaused: boolean;
   onGameOver: () => void;
   onCoinCollect: () => void;
+  onKeyCollect: () => void;
   onScoreUpdate: (score: number) => void;
 }
 
@@ -19,7 +20,7 @@ const GAME_SPEED_START = 12;
 const GAME_SPEED_MAX = 40;
 const LANE_WIDTH = 2;
 
-function GameLoop({ isPaused, onGameOver, onCoinCollect, onScoreUpdate }: GameProps) {
+function GameLoop({ isPaused, onGameOver, onCoinCollect, onKeyCollect, onScoreUpdate }: GameProps) {
   const [speed, setSpeed] = useState(GAME_SPEED_START);
   const scoreRef = useRef(0);
   const lastScoreUpdate = useRef(0);
@@ -86,6 +87,7 @@ function GameLoop({ isPaused, onGameOver, onCoinCollect, onScoreUpdate }: GamePr
         laneWidth={LANE_WIDTH}
         onGameOver={onGameOver}
         onCoinCollect={onCoinCollect}
+        onKeyCollect={onKeyCollect}
       />
     </>
   );

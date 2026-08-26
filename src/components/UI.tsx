@@ -1,8 +1,9 @@
 import React from 'react';
-import { Pause, Play, RotateCcw } from 'lucide-react';
+import { Pause, Play, RotateCcw, Key } from 'lucide-react';
 
 interface UIProps {
   coins: number;
+  keys: number;
   score: number;
   isPaused: boolean;
   gameOver: boolean;
@@ -10,7 +11,7 @@ interface UIProps {
   onRestart: () => void;
 }
 
-export default function UI({ coins, score, isPaused, gameOver, onPauseToggle, onRestart }: UIProps) {
+export default function UI({ coins, keys, score, isPaused, gameOver, onPauseToggle, onRestart }: UIProps) {
   return (
     <div className="absolute inset-0 pointer-events-none select-none">
       {/* Top UI */}
@@ -23,10 +24,19 @@ export default function UI({ coins, score, isPaused, gameOver, onPauseToggle, on
         </button>
 
         <div className="flex flex-col items-end gap-2">
-          <div className="bg-slate-800/80 backdrop-blur rounded-full px-4 py-2 border-2 border-white/20 flex items-center gap-2 shadow-lg">
-            <span className="text-white font-black text-xl">{coins}</span>
-            <div className="w-6 h-6 bg-yellow-400 rounded-full border-2 border-yellow-600 flex items-center justify-center">
-              <div className="w-3 h-3 bg-yellow-200 rounded-full"></div>
+          {/* Collectibles Row */}
+          <div className="flex gap-2">
+            {/* Keys Counter */}
+            <div className="bg-sky-900/80 backdrop-blur rounded-full px-3 py-1.5 border border-sky-400 flex items-center gap-1.5 shadow-lg">
+              <Key className="w-5 h-5 text-sky-300" />
+              <span className="text-white font-black text-lg shadow-sm">{keys}</span>
+            </div>
+            {/* Coins Counter */}
+            <div className="bg-slate-800/80 backdrop-blur rounded-full px-4 py-2 border-2 border-white/20 flex items-center gap-2 shadow-lg">
+              <span className="text-white font-black text-xl">{coins}</span>
+              <div className="w-6 h-6 bg-yellow-400 rounded-full border-2 border-yellow-600 flex items-center justify-center">
+                <div className="w-3 h-3 bg-yellow-200 rounded-full"></div>
+              </div>
             </div>
           </div>
           <div className="text-white font-black text-2xl drop-shadow-md">

@@ -3,11 +3,12 @@ import { Settings, Key, Star, Trophy, User, ShoppingCart, Calendar } from 'lucid
 
 interface HomeScreenProps {
   totalCoins: number;
+  totalKeys: number;
   highScore: number;
   onPlay: () => void;
 }
 
-export default function HomeScreen({ totalCoins, highScore, onPlay }: HomeScreenProps) {
+export default function HomeScreen({ totalCoins, totalKeys, highScore, onPlay }: HomeScreenProps) {
   return (
     <div 
       className="absolute inset-0 z-50 flex flex-col justify-between p-4 cursor-pointer"
@@ -20,7 +21,7 @@ export default function HomeScreen({ totalCoins, highScore, onPlay }: HomeScreen
           {/* Keys */}
           <div className="flex items-center gap-1 bg-sky-900/60 rounded-full px-2 py-0.5 border border-sky-400">
             <Key className="w-4 h-4 text-sky-300" />
-            <span className="text-white font-bold text-sm shadow-sm">5</span>
+            <span className="text-white font-bold text-sm shadow-sm">{totalKeys.toLocaleString()}</span>
           </div>
           {/* Coins */}
           <div className="flex items-center gap-1 bg-amber-900/60 rounded-full px-2 py-0.5 border border-amber-400">

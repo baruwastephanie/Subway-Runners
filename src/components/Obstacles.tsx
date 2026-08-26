@@ -15,9 +15,10 @@ interface ObstaclesProps {
   laneWidth: number;
   onGameOver: () => void;
   onCoinCollect: () => void;
+  onKeyCollect: () => void;
 }
 
-type ObstacleType = 'train' | 'jump' | 'slide' | 'coin';
+type ObstacleType = 'train' | 'jump' | 'slide' | 'coin' | 'key';
 
 interface Entity {
   id: number;
@@ -31,7 +32,7 @@ interface Entity {
 const SPAWN_Z = -200;
 const DESPAWN_Z = 10;
 
-export default function Obstacles({ speed, isPaused, playerState, laneWidth, onGameOver, onCoinCollect }: ObstaclesProps) {
+export default function Obstacles({ speed, isPaused, playerState, laneWidth, onGameOver, onCoinCollect, onKeyCollect }: ObstaclesProps) {
   const [entities, setEntities] = useState<Entity[]>([]);
   const entitiesRef = useRef<Entity[]>([]);
   const nextId = useRef(0);
@@ -44,6 +45,7 @@ export default function Obstacles({ speed, isPaused, playerState, laneWidth, onG
     if (rand < 0.3) type = 'train';
     else if (rand < 0.5) type = 'jump';
     else if (rand < 0.7) type = 'slide';
+    else if (rand < 0.75) type = 'key'; // 5% chance for a key, very scarce compared to coins (25%)
 
     const lane = Math.floor(Math.random() * 3) - 1; // -1, 0, 1
 
@@ -96,7 +98,7 @@ export default function Obstacles({ speed, isPaused, playerState, laneWidth, onG
 
     for (let i = 0; i < currentEntities.length; i++) {
       const entity = currentEntities[i];
-      if (entity.collected) continue; // Skip collected coins
+      if (entity.collected) continue; // Skip collected coins/keys
 
       // Move entity
       entity.z += speed * delta;
@@ -114,6 +116,12 @@ export default function Obstacles({ speed, isPaused, playerState, laneWidth, onG
           newlyCollected++;
           changed = true;
           continue; // Will be removed visually next frame
+        } else if (entity.type === 'key') {
+          entity.collected = true;
+          // We can call onKeyCollect immediately or track it
+          onKeyCollect();
+          changed = true;
+          continue;
         } else if (entity.type === 'slide' && playerState.current.isSliding) {
           // Player successfully slid under the barrier!
           // We ignore the collision.
@@ -156,6 +164,9 @@ export default function Obstacles({ speed, isPaused, playerState, laneWidth, onG
         }
         if (entity.type === 'coin') {
           return <Coin key={entity.id} entity={entity} laneWidth={laneWidth} />;
+        }
+        if (entity.type === 'key') {
+          return <KeyItem key={entity.id} entity={entity} laneWidth={laneWidth} />;
         }
         return null;
       })}
@@ -337,6 +348,53 @@ function Coin({ entity, laneWidth }: { entity: Entity, laneWidth: number }) {
       <mesh rotation={[0, 0, Math.PI / 2]} position={[-0.05, 0, 0]}>
          <cylinderGeometry args={[0.15, 0.15, 0.11, 16]} />
          <meshStandardMaterial color="#fef08a" metalness={0.5} roughness={0.2} />
+      </mesh>
+    </group>
+  );
+}
+
+function KeyItem({ entity, laneWidth }: { entity: Entity, laneWidth: number }) {
+  const meshRef = useRef<THREE.Group>(null);
+  
+  useFrame((_, delta) => {
+    if (meshRef.current) {
+      if (entity.collected) {
+        meshRef.current.visible = false;
+        return;
+      }
+      meshRef.current.position.z = entity.z;
+      // Bob up and down and rotate
+      meshRef.current.rotation.y += delta * 2;
+      meshRef.current.position.y = 0.8 + Math.sin(Date.now() * 0.005) * 0.2;
+      
+      entity.box.setFromObject(meshRef.current);
+      
+      // Expand hit box to prevent high-speed tunneling
+      entity.box.min.z -= 0.8;
+      entity.box.max.z += 0.8;
+    }
+  });
+
+  return (
+    <group ref={meshRef} position={[entity.lane * laneWidth, 0.8, entity.z]}>
+      {/* Key handle (round part) */}
+      <mesh castShadow receiveShadow position={[-0.2, 0, 0]}>
+        <torusGeometry args={[0.15, 0.05, 16, 32]} />
+        <meshStandardMaterial color="#38bdf8" metalness={0.6} roughness={0.3} />
+      </mesh>
+      {/* Key shaft */}
+      <mesh castShadow receiveShadow position={[0.1, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.04, 0.04, 0.4, 8]} />
+        <meshStandardMaterial color="#38bdf8" metalness={0.6} roughness={0.3} />
+      </mesh>
+      {/* Key teeth */}
+      <mesh castShadow receiveShadow position={[0.2, -0.1, 0]}>
+        <boxGeometry args={[0.05, 0.15, 0.04]} />
+        <meshStandardMaterial color="#38bdf8" metalness={0.6} roughness={0.3} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[0.1, -0.1, 0]}>
+        <boxGeometry args={[0.05, 0.15, 0.04]} />
+        <meshStandardMaterial color="#38bdf8" metalness={0.6} roughness={0.3} />
       </mesh>
     </group>
   );
