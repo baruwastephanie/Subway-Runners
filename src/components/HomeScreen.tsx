@@ -6,9 +6,10 @@ interface HomeScreenProps {
   totalKeys: number;
   highScore: number;
   onPlay: () => void;
+  onMissionsClick: () => void;
 }
 
-export default function HomeScreen({ totalCoins, totalKeys, highScore, onPlay }: HomeScreenProps) {
+export default function HomeScreen({ totalCoins, totalKeys, highScore, onPlay, onMissionsClick }: HomeScreenProps) {
   return (
     <div 
       className="absolute inset-0 z-50 flex flex-col justify-between p-4 cursor-pointer"
@@ -71,7 +72,7 @@ export default function HomeScreen({ totalCoins, totalKeys, highScore, onPlay }:
 
       {/* Bottom Nav */}
       <div className="flex justify-between items-end gap-2 px-2 pb-2" onClick={e => e.stopPropagation()}>
-        <NavButton icon={<Trophy />} label="Missions" badge="1" />
+        <NavButton icon={<Trophy />} label="Missions" badge="1" onClick={onMissionsClick} />
         <NavButton icon={<User />} label="Me" badge="2" />
         <NavButton icon={<ShoppingCart />} label="Shop" badge="2" />
         <NavButton icon={<Calendar />} label="Events" />
@@ -80,9 +81,9 @@ export default function HomeScreen({ totalCoins, totalKeys, highScore, onPlay }:
   );
 }
 
-function NavButton({ icon, label, badge }: { icon: React.ReactNode, label: string, badge?: string }) {
+function NavButton({ icon, label, badge, onClick }: { icon: React.ReactNode, label: string, badge?: string, onClick?: () => void }) {
   return (
-    <button className="flex-1 flex flex-col items-center justify-center bg-blue-600/90 hover:bg-blue-500 transition-colors border-2 border-white/80 rounded-xl py-2 relative shadow-lg group">
+    <button onClick={(e) => { e.stopPropagation(); if (onClick) onClick(); }} className="flex-1 flex flex-col items-center justify-center bg-blue-600/90 hover:bg-blue-500 transition-colors border-2 border-white/80 rounded-xl py-2 relative shadow-lg group">
       {badge && (
         <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center border-2 border-white shadow-sm z-10">
           {badge}
