@@ -129,6 +129,7 @@ export default function App() {
           gameOver={gameOver}
           onPauseToggle={() => setIsPaused(!isPaused)}
           onRestart={resetGame}
+          onHome={() => setAppPhase('home')}
         />
       )}
     </div>

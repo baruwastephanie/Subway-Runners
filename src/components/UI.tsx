@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pause, Play, RotateCcw, Key } from 'lucide-react';
+import { Pause, Play, RotateCcw, Key, Home } from 'lucide-react';
 
 interface UIProps {
   coins: number;
@@ -9,9 +9,10 @@ interface UIProps {
   gameOver: boolean;
   onPauseToggle: () => void;
   onRestart: () => void;
+  onHome: () => void;
 }
 
-export default function UI({ coins, keys, score, isPaused, gameOver, onPauseToggle, onRestart }: UIProps) {
+export default function UI({ coins, keys, score, isPaused, gameOver, onPauseToggle, onRestart, onHome }: UIProps) {
   return (
     <div className="absolute inset-0 pointer-events-none select-none">
       {/* Top UI */}
@@ -48,8 +49,8 @@ export default function UI({ coins, keys, score, isPaused, gameOver, onPauseTogg
       {/* Game Over Screen */}
       {gameOver && (
         <div className="absolute inset-0 bg-black/60 flex items-center justify-center pointer-events-auto backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-8 max-w-sm w-full mx-4 shadow-2xl flex flex-col items-center border-8 border-slate-200">
-            <h2 className="text-4xl font-black text-slate-800 mb-2">CAUGHT!</h2>
+          <div className="bg-white rounded-3xl p-10 max-w-md w-full mx-4 shadow-2xl flex flex-col items-center border-8 border-slate-200">
+            <h2 className="text-4xl font-black text-slate-800 mb-2">GAME OVER!</h2>
             <p className="text-slate-500 font-bold text-lg mb-6">Score: {Math.floor(score)}m</p>
             
             <div className="flex items-center gap-4 mb-8 bg-slate-100 rounded-2xl px-6 py-4 w-full justify-center">
@@ -61,10 +62,18 @@ export default function UI({ coins, keys, score, isPaused, gameOver, onPauseTogg
 
             <button 
               onClick={onRestart}
-              className="w-full py-4 bg-green-500 hover:bg-green-400 text-white rounded-2xl font-black text-xl shadow-[0_6px_0_rgb(21,128,61)] active:shadow-[0_0px_0_rgb(21,128,61)] active:translate-y-[6px] transition-all flex justify-center items-center gap-2"
+              className="w-full py-4 mb-4 bg-green-500 hover:bg-green-400 text-white rounded-2xl font-black text-xl shadow-[0_6px_0_rgb(21,128,61)] active:shadow-[0_0px_0_rgb(21,128,61)] active:translate-y-[6px] transition-all flex justify-center items-center gap-2"
             >
               <RotateCcw className="w-6 h-6" />
               PLAY AGAIN
+            </button>
+
+            <button 
+              onClick={onHome}
+              className="w-full py-4 bg-blue-500 hover:bg-blue-400 text-white rounded-2xl font-black text-xl shadow-[0_6px_0_rgb(29,78,216)] active:shadow-[0_0px_0_rgb(29,78,216)] active:translate-y-[6px] transition-all flex justify-center items-center gap-2"
+            >
+              <Home className="w-6 h-6" />
+              HOME
             </button>
           </div>
         </div>
