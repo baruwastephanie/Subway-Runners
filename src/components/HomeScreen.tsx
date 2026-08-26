@@ -7,9 +7,10 @@ interface HomeScreenProps {
   highScore: number;
   onPlay: () => void;
   onMissionsClick: () => void;
+  onMeClick: () => void;
 }
 
-export default function HomeScreen({ totalCoins, totalKeys, highScore, onPlay, onMissionsClick }: HomeScreenProps) {
+export default function HomeScreen({ totalCoins, totalKeys, highScore, onPlay, onMissionsClick, onMeClick }: HomeScreenProps) {
   return (
     <div 
       className="absolute inset-0 z-50 flex flex-col justify-between p-4 cursor-pointer"
@@ -73,7 +74,7 @@ export default function HomeScreen({ totalCoins, totalKeys, highScore, onPlay, o
       {/* Bottom Nav */}
       <div className="flex justify-between items-end gap-2 px-2 pb-2" onClick={e => e.stopPropagation()}>
         <NavButton icon={<Trophy />} label="Missions" badge="1" onClick={onMissionsClick} />
-        <NavButton icon={<User />} label="Me" badge="2" />
+        <NavButton icon={<User />} label="Me" badge="2" onClick={onMeClick} />
         <NavButton icon={<ShoppingCart />} label="Shop" badge="2" />
         <NavButton icon={<Calendar />} label="Events" />
       </div>

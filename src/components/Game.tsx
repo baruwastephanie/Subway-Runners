@@ -10,6 +10,7 @@ import Snow from './Snow';
 
 interface GameProps {
   isPaused: boolean;
+  characterId: string;
   onGameOver: () => void;
   onCoinCollect: () => void;
   onKeyCollect: () => void;
@@ -20,7 +21,7 @@ const GAME_SPEED_START = 12;
 const GAME_SPEED_MAX = 40;
 const LANE_WIDTH = 2;
 
-function GameLoop({ isPaused, onGameOver, onCoinCollect, onKeyCollect, onScoreUpdate }: GameProps) {
+function GameLoop({ isPaused, characterId, onGameOver, onCoinCollect, onKeyCollect, onScoreUpdate }: GameProps) {
   const [speed, setSpeed] = useState(GAME_SPEED_START);
   const scoreRef = useRef(0);
   const lastScoreUpdate = useRef(0);
@@ -77,7 +78,7 @@ function GameLoop({ isPaused, onGameOver, onCoinCollect, onKeyCollect, onScoreUp
       <Snow count={800} />
 
       {/* Player character */}
-      <Player playerRef={playerRef} playerState={playerState} isPaused={isPaused} laneWidth={LANE_WIDTH} speed={speed} />
+      <Player playerRef={playerRef} playerState={playerState} isPaused={isPaused} laneWidth={LANE_WIDTH} speed={speed} characterId={characterId} />
 
       {/* Obstacles and Coins */}
       <Obstacles 

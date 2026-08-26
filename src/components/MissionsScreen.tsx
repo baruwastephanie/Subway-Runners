@@ -5,12 +5,13 @@ import { MISSIONS } from '../data/missions';
 interface MissionsScreenProps {
   totalCoins: number;
   totalKeys: number;
+  unlockedCharactersCount: number;
   missionStatus: Record<string, 'incomplete' | 'completed' | 'collected'>;
   onCollect: (id: string, reward: number) => void;
   onBack: () => void;
 }
 
-export default function MissionsScreen({ totalCoins, totalKeys, missionStatus, onCollect, onBack }: MissionsScreenProps) {
+export default function MissionsScreen({ totalCoins, totalKeys, unlockedCharactersCount, missionStatus, onCollect, onBack }: MissionsScreenProps) {
   return (
     <div className="absolute inset-0 z-[150] bg-sky-900 flex flex-col p-4 touch-none overflow-hidden">
       {/* Header */}
@@ -34,7 +35,7 @@ export default function MissionsScreen({ totalCoins, totalKeys, missionStatus, o
           let progress = 0;
           if (mission.type === 'coins') progress = totalCoins;
           if (mission.type === 'keys') progress = totalKeys;
-          if (mission.type === 'chars') progress = 0; // Placeholder
+          if (mission.type === 'chars') progress = unlockedCharactersCount;
           
           const isCompleted = status === 'completed';
           const isCollected = status === 'collected';

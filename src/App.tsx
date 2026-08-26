@@ -8,10 +8,11 @@ import Game from './components/Game';
 import UI from './components/UI';
 import HomeScreen from './components/HomeScreen';
 import MissionsScreen from './components/MissionsScreen';
+import MeScreen from './components/MeScreen';
 import { MISSIONS } from './data/missions';
 
 export default function App() {
-  const [appPhase, setAppPhase] = useState<'splash' | 'loading' | 'home' | 'game' | 'missions'>('splash');
+  const [appPhase, setAppPhase] = useState<'splash' | 'loading' | 'home' | 'game' | 'missions' | 'me'>('splash');
   const [coins, setCoins] = useState(0);
   const [keys, setKeys] = useState(0);
   const [totalCoins, setTotalCoins] = useState(0);
@@ -21,13 +22,16 @@ export default function App() {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   
+  const [unlockedCharacters, setUnlockedCharacters] = useState<string[]>(['default']);
+  const [activeCharacterId, setActiveCharacterId] = useState('default');
+
   const [missionStatus, setMissionStatus] = useState<Record<string, 'incomplete' | 'completed' | 'collected'>>({});
   const [notifiedMissions, setNotifiedMissions] = useState<string[]>([]);
 
   const [resetKey, setResetKey] = useState(0);
 
   // Helper to check for completed missions
-  const checkMissions = (currentCoins: number, currentKeys: number, currentStatus: Record<string, string>) => {
+  const checkMissions = (currentCoins: number, currentKeys: number, charsCount: number, currentStatus: Record<string, string>) => {
     let updated = false;
     const newStatus = { ...currentStatus };
     const newlyCompleted: string[] = [];
@@ -37,6 +41,7 @@ export default function App() {
       let progress = 0;
       if (m.type === 'coins') progress = currentCoins;
       if (m.type === 'keys') progress = currentKeys;
+      if (m.type === 'chars') progress = charsCount;
       if (progress >= m.target) {
         newStatus[m.id] = 'completed';
         newlyCompleted.push(m.title);
@@ -60,6 +65,8 @@ export default function App() {
     const savedKeys = localStorage.getItem('totalKeys');
     const savedScore = localStorage.getItem('highScore');
     const savedMissions = localStorage.getItem('missionStatus');
+    const savedUnlocked = localStorage.getItem('unlockedCharacters');
+    const savedActive = localStorage.getItem('activeCharacterId');
     
     let initCoins = 0;
     let initKeys = 0;
@@ -77,12 +84,15 @@ export default function App() {
 
     if (savedMissions) initStatus = JSON.parse(savedMissions);
     
+    if (savedUnlocked) setUnlockedCharacters(JSON.parse(savedUnlocked));
+    if (savedActive) setActiveCharacterId(savedActive);
+    
     setTotalCoins(initCoins);
     setTotalKeys(initKeys);
     setMissionStatus(initStatus as any);
     
     // Retroactively check missions in case they passed thresholds before missions were added
-    checkMissions(initCoins, initKeys, initStatus);
+    checkMissions(initCoins, initKeys, savedUnlocked ? JSON.parse(savedUnlocked).length : 1, initStatus);
 
 
     let loadingTimer: ReturnType<typeof setTimeout>;
@@ -126,7 +136,7 @@ export default function App() {
     localStorage.setItem('totalKeys', newTotalKeys.toString());
 
     // Check newly completed missions
-    checkMissions(newTotalCoins, newTotalKeys, missionStatus);
+    checkMissions(newTotalCoins, newTotalKeys, unlockedCharacters.length, missionStatus);
   };
 
   const handleCollectReward = (missionId: string, reward: number) => {
@@ -139,7 +149,35 @@ export default function App() {
     localStorage.setItem('totalCoins', newTotalCoins.toString());
     
     // Check if the rewarded coins triggered any new missions
-    checkMissions(newTotalCoins, totalKeys, newStatus);
+    checkMissions(newTotalCoins, totalKeys, unlockedCharacters.length, newStatus);
+  };
+
+  const handleUnlockCharacter = (id: string, cost: number, currency: 'coins' | 'keys') => {
+    if (currency === 'coins') {
+      if (totalCoins < cost) return false;
+      const newTotalCoins = totalCoins - cost;
+      setTotalCoins(newTotalCoins);
+      localStorage.setItem('totalCoins', newTotalCoins.toString());
+    } else {
+      if (totalKeys < cost) return false;
+      const newTotalKeys = totalKeys - cost;
+      setTotalKeys(newTotalKeys);
+      localStorage.setItem('totalKeys', newTotalKeys.toString());
+    }
+
+    const newUnlocked = [...unlockedCharacters, id];
+    setUnlockedCharacters(newUnlocked);
+    localStorage.setItem('unlockedCharacters', JSON.stringify(newUnlocked));
+    
+    // Check missions for characters
+    checkMissions(currency === 'coins' ? totalCoins - cost : totalCoins, currency === 'keys' ? totalKeys - cost : totalKeys, newUnlocked.length, missionStatus);
+    
+    return true;
+  };
+
+  const handleSelectCharacter = (id: string) => {
+    setActiveCharacterId(id);
+    localStorage.setItem('activeCharacterId', id);
   };
 
   return (
@@ -201,20 +239,34 @@ export default function App() {
             setAppPhase('game');
           }} 
           onMissionsClick={() => setAppPhase('missions')}
+          onMeClick={() => setAppPhase('me')}
         />
       )}
       {appPhase === 'missions' && (
         <MissionsScreen
           totalCoins={totalCoins}
           totalKeys={totalKeys}
+          unlockedCharactersCount={unlockedCharacters.length}
           missionStatus={missionStatus}
           onCollect={handleCollectReward}
+          onBack={() => setAppPhase('home')}
+        />
+      )}
+      {appPhase === 'me' && (
+        <MeScreen
+          totalCoins={totalCoins}
+          totalKeys={totalKeys}
+          unlockedCharacters={unlockedCharacters}
+          activeCharacterId={activeCharacterId}
+          onUnlock={handleUnlockCharacter}
+          onSelect={handleSelectCharacter}
           onBack={() => setAppPhase('home')}
         />
       )}
       <Game 
         key={resetKey}
         isPaused={isPaused || gameOver || appPhase !== 'game'} 
+        characterId={activeCharacterId}
         onGameOver={handleGameOver} 
         onCoinCollect={() => setCoins(c => c + 1)}
         onKeyCollect={() => setKeys(k => k + 1)}

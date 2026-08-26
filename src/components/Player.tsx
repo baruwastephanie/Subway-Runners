@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { CHARACTERS } from '../data/characters';
 
 interface PlayerProps {
   playerRef: React.RefObject<THREE.Group>;
@@ -14,14 +15,19 @@ interface PlayerProps {
   isPaused: boolean;
   laneWidth: number;
   speed: number;
+  characterId?: string;
 }
 
 const GRAVITY = -60;
 const JUMP_FORCE = 20;
 const SLIDE_DURATION = 0.65;
 
-export default function Player({ playerRef, playerState, isPaused, laneWidth, speed }: PlayerProps) {
+export default function Player({ playerRef, playerState, isPaused, laneWidth, speed, characterId = 'default' }: PlayerProps) {
+  const characterData = CHARACTERS.find(c => c.id === characterId) || CHARACTERS[0];
+  const { primary, secondary, skin, hair, shoes } = characterData.colors;
+
   const velocityY = useRef(0);
+
   const slideTimer = useRef(0);
   
   // Animation refs
@@ -281,7 +287,7 @@ export default function Player({ playerRef, playerState, isPaused, laneWidth, sp
           {/* Torso Base */}
           <mesh position={[0, 0.9, 0]} castShadow>
             <capsuleGeometry args={[0.18, 0.35, 16, 16]} />
-            <meshStandardMaterial color="#cc1d1d" roughness={0.7} />
+            <meshStandardMaterial color={primary} roughness={0.7} />
           </mesh>
           
           {/* Belt */}
@@ -297,13 +303,13 @@ export default function Player({ playerRef, playerState, isPaused, laneWidth, sp
           {/* Skirt / Coat Bottom */}
           <mesh position={[0, 0.52, 0]} castShadow>
             <coneGeometry args={[0.35, 0.35, 32, 1, true]} />
-            <meshStandardMaterial color="#cc1d1d" roughness={0.7} side={THREE.DoubleSide} />
+            <meshStandardMaterial color={primary} roughness={0.7} side={THREE.DoubleSide} />
           </mesh>
 
           {/* Head & Neck */}
           <mesh position={[0, 1.25, 0]} castShadow>
             <sphereGeometry args={[0.18, 32, 32]} />
-            <meshStandardMaterial color="#fcd8ba" roughness={0.4} />
+            <meshStandardMaterial color={skin} roughness={0.4} />
           </mesh>
           
           {/* Hair */}
@@ -311,12 +317,12 @@ export default function Player({ playerRef, playerState, isPaused, laneWidth, sp
             {/* Hair Cap */}
             <mesh castShadow>
               <sphereGeometry args={[0.19, 32, 32, 0, Math.PI * 2, 0, Math.PI / 1.5]} />
-              <meshStandardMaterial color="#4a2f1d" roughness={0.8} />
+              <meshStandardMaterial color={hair} roughness={0.8} />
             </mesh>
             {/* Ponytail / Back Hair */}
             <mesh position={[0, -0.25, -0.15]} rotation={[0.2, 0, 0]} castShadow>
               <capsuleGeometry args={[0.14, 0.4, 16, 16]} />
-              <meshStandardMaterial color="#4a2f1d" roughness={0.8} />
+              <meshStandardMaterial color={hair} roughness={0.8} />
             </mesh>
           </group>
 
@@ -324,15 +330,15 @@ export default function Player({ playerRef, playerState, isPaused, laneWidth, sp
           <group position={[0, 1.38, 0]}>
             <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
               <torusGeometry args={[0.17, 0.06, 16, 32]} />
-              <meshStandardMaterial color="#ffffff" roughness={0.9} />
+              <meshStandardMaterial color={secondary} roughness={0.9} />
             </mesh>
             <mesh position={[0, 0.18, -0.05]} rotation={[-0.2, 0, 0]} castShadow>
               <coneGeometry args={[0.16, 0.4, 32]} />
-              <meshStandardMaterial color="#cc1d1d" roughness={0.7} />
+              <meshStandardMaterial color={primary} roughness={0.7} />
             </mesh>
             <mesh position={[0, 0.38, -0.15]} castShadow>
               <sphereGeometry args={[0.07, 16, 16]} />
-              <meshStandardMaterial color="#ffffff" roughness={0.9} />
+              <meshStandardMaterial color={secondary} roughness={0.9} />
             </mesh>
           </group>
 
@@ -341,20 +347,20 @@ export default function Player({ playerRef, playerState, isPaused, laneWidth, sp
             {/* Shoulder to Elbow */}
             <mesh position={[-0.02, -0.12, 0]} rotation={[0, 0, 0.2]} castShadow>
               <capsuleGeometry args={[0.05, 0.18, 16, 16]} />
-              <meshStandardMaterial color="#cc1d1d" roughness={0.7} />
+              <meshStandardMaterial color={primary} roughness={0.7} />
             </mesh>
             <group position={[-0.05, -0.26, 0]} ref={leftForearmRef} rotation={[-0.2, 0, 0]}>
               <mesh position={[0, -0.08, 0]} castShadow>
                 <capsuleGeometry args={[0.045, 0.15, 16, 16]} />
-                <meshStandardMaterial color="#cc1d1d" roughness={0.7} />
+                <meshStandardMaterial color={primary} roughness={0.7} />
               </mesh>
               <mesh position={[0, -0.18, 0]} castShadow>
                 <sphereGeometry args={[0.055, 16, 16]} />
-                <meshStandardMaterial color="#ffffff" roughness={0.9} />
+                <meshStandardMaterial color={secondary} roughness={0.9} />
               </mesh>
               <mesh position={[0, -0.24, 0]} castShadow>
                 <sphereGeometry args={[0.045, 16, 16]} />
-                <meshStandardMaterial color="#fcd8ba" roughness={0.4} />
+                <meshStandardMaterial color={skin} roughness={0.4} />
               </mesh>
             </group>
           </group>
@@ -364,20 +370,20 @@ export default function Player({ playerRef, playerState, isPaused, laneWidth, sp
             {/* Shoulder to Elbow */}
             <mesh position={[0.02, -0.12, 0]} rotation={[0, 0, -0.2]} castShadow>
               <capsuleGeometry args={[0.05, 0.18, 16, 16]} />
-              <meshStandardMaterial color="#cc1d1d" roughness={0.7} />
+              <meshStandardMaterial color={primary} roughness={0.7} />
             </mesh>
             <group position={[0.05, -0.26, 0]} ref={rightForearmRef} rotation={[-0.2, 0, 0]}>
               <mesh position={[0, -0.08, 0]} castShadow>
                 <capsuleGeometry args={[0.045, 0.15, 16, 16]} />
-                <meshStandardMaterial color="#cc1d1d" roughness={0.7} />
+                <meshStandardMaterial color={primary} roughness={0.7} />
               </mesh>
               <mesh position={[0, -0.18, 0]} castShadow>
                 <sphereGeometry args={[0.055, 16, 16]} />
-                <meshStandardMaterial color="#ffffff" roughness={0.9} />
+                <meshStandardMaterial color={secondary} roughness={0.9} />
               </mesh>
               <mesh position={[0, -0.24, 0]} castShadow>
                 <sphereGeometry args={[0.045, 16, 16]} />
-                <meshStandardMaterial color="#fcd8ba" roughness={0.4} />
+                <meshStandardMaterial color={skin} roughness={0.4} />
               </mesh>
             </group>
           </group>
@@ -385,31 +391,31 @@ export default function Player({ playerRef, playerState, isPaused, laneWidth, sp
 
         {/* Left Leg (Jointed & Striped) */}
         <group position={[-0.12, 0.45, 0]} ref={leftLegRef}>
-          <mesh position={[0, -0.1, 0]} castShadow><cylinderGeometry args={[0.06, 0.055, 0.1, 16]} /><meshStandardMaterial color="#cc1d1d" /></mesh>
-          <mesh position={[0, -0.2, 0]} castShadow><cylinderGeometry args={[0.055, 0.05, 0.1, 16]} /><meshStandardMaterial color="#ffffff" /></mesh>
+          <mesh position={[0, -0.1, 0]} castShadow><cylinderGeometry args={[0.06, 0.055, 0.1, 16]} /><meshStandardMaterial color={primary} /></mesh>
+          <mesh position={[0, -0.2, 0]} castShadow><cylinderGeometry args={[0.055, 0.05, 0.1, 16]} /><meshStandardMaterial color={secondary} /></mesh>
           
           <group position={[0, -0.25, 0]} ref={leftCalfRef}>
-            <mesh position={[0, -0.05, 0]} castShadow><cylinderGeometry args={[0.05, 0.045, 0.1, 16]} /><meshStandardMaterial color="#cc1d1d" /></mesh>
-            <mesh position={[0, -0.15, 0]} castShadow><cylinderGeometry args={[0.045, 0.04, 0.1, 16]} /><meshStandardMaterial color="#ffffff" /></mesh>
-            <mesh position={[0, -0.25, 0]} castShadow><cylinderGeometry args={[0.04, 0.04, 0.1, 16]} /><meshStandardMaterial color="#cc1d1d" /></mesh>
+            <mesh position={[0, -0.05, 0]} castShadow><cylinderGeometry args={[0.05, 0.045, 0.1, 16]} /><meshStandardMaterial color={primary} /></mesh>
+            <mesh position={[0, -0.15, 0]} castShadow><cylinderGeometry args={[0.045, 0.04, 0.1, 16]} /><meshStandardMaterial color={secondary} /></mesh>
+            <mesh position={[0, -0.25, 0]} castShadow><cylinderGeometry args={[0.04, 0.04, 0.1, 16]} /><meshStandardMaterial color={primary} /></mesh>
             {/* Shoe */}
-            <mesh position={[0, -0.35, 0.04]} castShadow><capsuleGeometry args={[0.06, 0.12, 16, 16]} rotation={[Math.PI / 2, 0, 0]} /><meshStandardMaterial color="#555555" /></mesh>
-            <mesh position={[0, -0.4, 0.04]} castShadow><boxGeometry args={[0.13, 0.04, 0.25]} /><meshStandardMaterial color="#ffffff" /></mesh>
+            <mesh position={[0, -0.35, 0.04]} castShadow><capsuleGeometry args={[0.06, 0.12, 16, 16]} rotation={[Math.PI / 2, 0, 0]} /><meshStandardMaterial color={shoes} /></mesh>
+            <mesh position={[0, -0.4, 0.04]} castShadow><boxGeometry args={[0.13, 0.04, 0.25]} /><meshStandardMaterial color={secondary} /></mesh>
           </group>
         </group>
 
         {/* Right Leg (Jointed & Striped) */}
         <group position={[0.12, 0.45, 0]} ref={rightLegRef}>
-          <mesh position={[0, -0.1, 0]} castShadow><cylinderGeometry args={[0.06, 0.055, 0.1, 16]} /><meshStandardMaterial color="#cc1d1d" /></mesh>
-          <mesh position={[0, -0.2, 0]} castShadow><cylinderGeometry args={[0.055, 0.05, 0.1, 16]} /><meshStandardMaterial color="#ffffff" /></mesh>
+          <mesh position={[0, -0.1, 0]} castShadow><cylinderGeometry args={[0.06, 0.055, 0.1, 16]} /><meshStandardMaterial color={primary} /></mesh>
+          <mesh position={[0, -0.2, 0]} castShadow><cylinderGeometry args={[0.055, 0.05, 0.1, 16]} /><meshStandardMaterial color={secondary} /></mesh>
           
           <group position={[0, -0.25, 0]} ref={rightCalfRef}>
-            <mesh position={[0, -0.05, 0]} castShadow><cylinderGeometry args={[0.05, 0.045, 0.1, 16]} /><meshStandardMaterial color="#cc1d1d" /></mesh>
-            <mesh position={[0, -0.15, 0]} castShadow><cylinderGeometry args={[0.045, 0.04, 0.1, 16]} /><meshStandardMaterial color="#ffffff" /></mesh>
-            <mesh position={[0, -0.25, 0]} castShadow><cylinderGeometry args={[0.04, 0.04, 0.1, 16]} /><meshStandardMaterial color="#cc1d1d" /></mesh>
+            <mesh position={[0, -0.05, 0]} castShadow><cylinderGeometry args={[0.05, 0.045, 0.1, 16]} /><meshStandardMaterial color={primary} /></mesh>
+            <mesh position={[0, -0.15, 0]} castShadow><cylinderGeometry args={[0.045, 0.04, 0.1, 16]} /><meshStandardMaterial color={secondary} /></mesh>
+            <mesh position={[0, -0.25, 0]} castShadow><cylinderGeometry args={[0.04, 0.04, 0.1, 16]} /><meshStandardMaterial color={primary} /></mesh>
             {/* Shoe */}
-            <mesh position={[0, -0.35, 0.04]} castShadow><capsuleGeometry args={[0.06, 0.12, 16, 16]} rotation={[Math.PI / 2, 0, 0]} /><meshStandardMaterial color="#555555" /></mesh>
-            <mesh position={[0, -0.4, 0.04]} castShadow><boxGeometry args={[0.13, 0.04, 0.25]} /><meshStandardMaterial color="#ffffff" /></mesh>
+            <mesh position={[0, -0.35, 0.04]} castShadow><capsuleGeometry args={[0.06, 0.12, 16, 16]} rotation={[Math.PI / 2, 0, 0]} /><meshStandardMaterial color={shoes} /></mesh>
+            <mesh position={[0, -0.4, 0.04]} castShadow><boxGeometry args={[0.13, 0.04, 0.25]} /><meshStandardMaterial color={secondary} /></mesh>
           </group>
         </group>
       </group>
