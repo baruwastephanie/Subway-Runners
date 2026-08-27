@@ -8,9 +8,10 @@ interface HomeScreenProps {
   onPlay: () => void;
   onMissionsClick: () => void;
   onMeClick: () => void;
+  onSettingsClick: () => void;
 }
 
-export default function HomeScreen({ totalCoins, totalKeys, highScore, onPlay, onMissionsClick, onMeClick }: HomeScreenProps) {
+export default function HomeScreen({ totalCoins, totalKeys, highScore, onPlay, onMissionsClick, onMeClick, onSettingsClick }: HomeScreenProps) {
   const [showComingSoon, setShowComingSoon] = useState(false);
 
   return (
@@ -43,7 +44,10 @@ export default function HomeScreen({ totalCoins, totalKeys, highScore, onPlay, o
               <span className="text-amber-400 font-black text-xl drop-shadow-md">x2</span>
               <Star className="w-8 h-8 text-amber-400 fill-amber-400 drop-shadow-md" />
             </div>
-            <button className="text-white drop-shadow-md hover:scale-110 transition-transform">
+            <button 
+              className="text-white drop-shadow-md hover:scale-110 transition-transform"
+              onClick={(e) => { e.stopPropagation(); onSettingsClick(); }}
+            >
               <Settings className="w-8 h-8 drop-shadow-md" />
             </button>
           </div>

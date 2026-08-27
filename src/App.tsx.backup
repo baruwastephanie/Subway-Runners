@@ -9,16 +9,10 @@ import UI from './components/UI';
 import HomeScreen from './components/HomeScreen';
 import MissionsScreen from './components/MissionsScreen';
 import MeScreen from './components/MeScreen';
-import SettingsScreen from './components/SettingsScreen';
 import { MISSIONS } from './data/missions';
-import { audioEngine } from './audio';
 
 export default function App() {
-  const [appPhase, setAppPhase] = useState<'splash' | 'loading' | 'home' | 'game' | 'missions' | 'me' | 'settings'>('splash');
-  
-  const [audioEnabled, setAudioEnabled] = useState(true);
-  const [hapticsEnabled, setHapticsEnabled] = useState(true);
-
+  const [appPhase, setAppPhase] = useState<'splash' | 'loading' | 'home' | 'game' | 'missions' | 'me'>('splash');
   const [coins, setCoins] = useState(0);
   const [keys, setKeys] = useState(0);
   const [totalCoins, setTotalCoins] = useState(0);
@@ -73,8 +67,6 @@ export default function App() {
     const savedMissions = localStorage.getItem('missionStatus');
     const savedUnlocked = localStorage.getItem('unlockedCharacters');
     const savedActive = localStorage.getItem('activeCharacterId');
-    const savedAudio = localStorage.getItem('audioEnabled');
-    const savedHaptics = localStorage.getItem('hapticsEnabled');
     
     let initCoins = 0;
     let initKeys = 0;
@@ -94,9 +86,6 @@ export default function App() {
     
     if (savedUnlocked) setUnlockedCharacters(JSON.parse(savedUnlocked));
     if (savedActive) setActiveCharacterId(savedActive);
-    
-    if (savedAudio !== null) setAudioEnabled(savedAudio === 'true');
-    if (savedHaptics !== null) setHapticsEnabled(savedHaptics === 'true');
     
     setTotalCoins(initCoins);
     setTotalKeys(initKeys);
@@ -118,24 +107,6 @@ export default function App() {
       if (loadingTimer) clearTimeout(loadingTimer);
     };
   }, []);
-
-  useEffect(() => {
-    if (appPhase === 'game' && !isPaused && !gameOver) {
-      audioEngine.init();
-      audioEngine.playBGM();
-    } else {
-      audioEngine.stopBGM();
-    }
-  }, [appPhase, isPaused, gameOver]);
-
-  useEffect(() => {
-    localStorage.setItem('audioEnabled', audioEnabled.toString());
-    audioEngine.setMuted(!audioEnabled);
-  }, [audioEnabled]);
-
-  useEffect(() => {
-    localStorage.setItem('hapticsEnabled', hapticsEnabled.toString());
-  }, [hapticsEnabled]);
 
   const resetGame = () => {
     setCoins(0);
@@ -283,22 +254,11 @@ export default function App() {
           totalKeys={totalKeys}
           highScore={highScore} 
           onPlay={() => {
-            audioEngine.init();
             resetGame();
             setAppPhase('game');
           }} 
           onMissionsClick={() => setAppPhase('missions')}
           onMeClick={() => setAppPhase('me')}
-          onSettingsClick={() => setAppPhase('settings')}
-        />
-      )}
-      {appPhase === 'settings' && (
-        <SettingsScreen
-          audioEnabled={audioEnabled}
-          hapticsEnabled={hapticsEnabled}
-          onToggleAudio={() => setAudioEnabled(!audioEnabled)}
-          onToggleHaptics={() => setHapticsEnabled(!hapticsEnabled)}
-          onHome={() => setAppPhase('home')}
         />
       )}
       {appPhase === 'missions' && (
@@ -327,16 +287,8 @@ export default function App() {
         isPaused={isPaused || gameOver || appPhase !== 'game'} 
         characterId={activeCharacterId}
         onGameOver={handleGameOver} 
-        onCoinCollect={() => {
-          audioEngine.playCoin();
-          if (hapticsEnabled && 'vibrate' in navigator) navigator.vibrate(15);
-          setCoins(c => c + 1);
-        }}
-        onKeyCollect={() => {
-          audioEngine.playKey();
-          if (hapticsEnabled && 'vibrate' in navigator) navigator.vibrate([20, 30, 20]);
-          setKeys(k => k + 1);
-        }}
+        onCoinCollect={() => setCoins(c => c + 1)}
+        onKeyCollect={() => setKeys(k => k + 1)}
         onScoreUpdate={(s) => setScore(s)}
       />
       {appPhase === 'game' && (
