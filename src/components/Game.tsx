@@ -100,7 +100,7 @@ export default function Game(props: GameProps) {
       shadows 
       camera={{ position: [0, 3, 7], fov: 65, rotation: [-8 * (Math.PI / 180), 0, 0] }} 
     >
-      <fog attach="fog" args={['#e0f2fe', 80, 210]} />
+      <fog attach="fog" args={['#e0f2fe', 40, 110]} />
       <GameLoop {...props} />
     </Canvas>
   );

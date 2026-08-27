@@ -75,9 +75,9 @@ export default function HomeScreen({ totalCoins, totalKeys, highScore, onPlay, o
 
         {/* Bottom Nav */}
         <div className="flex justify-between items-end gap-2 px-2 pb-2" onClick={e => e.stopPropagation()}>
-          <NavButton icon={<Trophy />} label="Missions" badge="1" onClick={onMissionsClick} />
-          <NavButton icon={<User />} label="Me" badge="2" onClick={onMeClick} />
-          <NavButton icon={<ShoppingCart />} label="Shop" badge="2" onClick={() => setShowComingSoon(true)} />
+          <NavButton icon={<Trophy />} label="Missions" onClick={onMissionsClick} />
+          <NavButton icon={<User />} label="Me" onClick={onMeClick} />
+          <NavButton icon={<ShoppingCart />} label="Shop" onClick={() => setShowComingSoon(true)} />
           <NavButton icon={<Calendar />} label="Events" onClick={() => setShowComingSoon(true)} />
         </div>
       </div>

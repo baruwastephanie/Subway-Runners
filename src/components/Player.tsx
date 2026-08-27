@@ -64,17 +64,17 @@ export default function Player({ playerRef, playerState, isPaused, laneWidth, sp
         case 'ArrowUp':
         case 'KeyW':
         case 'Space':
-          if (!state.isJumping) {
+          if (!state.isJumping && !state.isSliding) {
             state.isJumping = true;
-            state.isSliding = false; // Cancel slide if any
             velocityY.current = JUMP_FORCE;
           }
           break;
         case 'ArrowDown':
         case 'KeyS':
-          state.isSliding = true;
-          slideTimer.current = SLIDE_DURATION;
-          if (state.isJumping) {
+          if (!state.isJumping && !state.isSliding) {
+            state.isSliding = true;
+            slideTimer.current = SLIDE_DURATION;
+          } else if (state.isJumping) {
             // Fast fall
             velocityY.current = -JUMP_FORCE;
           }
@@ -84,96 +84,78 @@ export default function Player({ playerRef, playerState, isPaused, laneWidth, sp
 
     let pointerStartX = 0;
     let pointerStartY = 0;
-    let isSwiping = false;
 
     const handlePointerDown = (e: PointerEvent) => {
       pointerStartX = e.clientX;
       pointerStartY = e.clientY;
-      isSwiping = true;
     };
 
     const handleTouchStart = (e: TouchEvent) => {
       pointerStartX = e.touches[0].clientX;
       pointerStartY = e.touches[0].clientY;
-      isSwiping = true;
     };
 
     let lastSwipeTime = 0;
 
-    const processSwipe = (currentX: number, currentY: number) => {
-      if (isPaused || !isSwiping) return;
+    const processSwipe = (endX: number, endY: number) => {
+      if (isPaused) return;
       const now = Date.now();
       if (now - lastSwipeTime < 50) return; // Prevent double-fire from touch+pointer events
       
-      const dx = currentX - pointerStartX;
-      const dy = currentY - pointerStartY;
+      const dx = endX - pointerStartX;
+      const dy = endY - pointerStartY;
       
-      const SWIPE_THRESHOLD = 30; // Minimum distance to trigger swipe
-
-      if (Math.abs(dx) > SWIPE_THRESHOLD || Math.abs(dy) > SWIPE_THRESHOLD) {
-        const state = playerState.current;
-        
-        if (Math.abs(dx) > Math.abs(dy)) {
-          // Horizontal swipe
+      if (Math.abs(dx) > Math.abs(dy)) {
+        // Horizontal swipe
+        if (Math.abs(dx) > 20) {
+          const state = playerState.current;
           if (dx > 0 && state.lane < 1) state.lane += 1;
           else if (dx < 0 && state.lane > -1) state.lane -= 1;
-        } else {
-          // Vertical swipe
-          if (dy < 0) {
+          lastSwipeTime = now;
+        }
+      } else {
+        // Vertical swipe
+        if (Math.abs(dy) > 20) {
+          const state = playerState.current;
+          if (dy < 0 && !state.isJumping && !state.isSliding) {
             // Swipe Up -> Jump
-            if (!state.isJumping) {
-              state.isJumping = true;
-              state.isSliding = false;
-              velocityY.current = JUMP_FORCE;
-            }
+            state.isJumping = true;
+            velocityY.current = JUMP_FORCE;
+            lastSwipeTime = now;
           } else if (dy > 0) {
             // Swipe Down -> Slide
-            state.isSliding = true;
-            slideTimer.current = SLIDE_DURATION;
-            if (state.isJumping) {
+            if (!state.isJumping && !state.isSliding) {
+              state.isSliding = true;
+              slideTimer.current = SLIDE_DURATION;
+              lastSwipeTime = now;
+            } else if (state.isJumping) {
               velocityY.current = -JUMP_FORCE;
+              lastSwipeTime = now;
             }
           }
         }
-        lastSwipeTime = now;
-        
-        // Reset starting points so we can detect subsequent swipes without lifting finger
-        pointerStartX = currentX;
-        pointerStartY = currentY;
       }
     };
 
-    const handlePointerMove = (e: PointerEvent) => {
+    const handlePointerUp = (e: PointerEvent) => {
       processSwipe(e.clientX, e.clientY);
     };
 
-    const handleTouchMove = (e: TouchEvent) => {
-      processSwipe(e.touches[0].clientX, e.touches[0].clientY);
-    };
-
-    const handlePointerUp = (e: PointerEvent) => {
-      isSwiping = false;
-    };
-
     const handleTouchEnd = (e: TouchEvent) => {
-      isSwiping = false;
+      processSwipe(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
     };
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('pointerdown', handlePointerDown, { passive: true });
-    window.addEventListener('pointermove', handlePointerMove, { passive: true });
     window.addEventListener('pointerup', handlePointerUp, { passive: true });
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: true });
     window.addEventListener('touchend', handleTouchEnd, { passive: true });
     
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('pointerdown', handlePointerDown);
-      window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerup', handlePointerUp);
       window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
     };
   }, [isPaused, playerState]);

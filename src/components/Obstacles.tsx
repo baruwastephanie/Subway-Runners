@@ -29,7 +29,7 @@ interface Entity {
   collected?: boolean;
 }
 
-const SPAWN_Z = -200;
+const SPAWN_Z = -100;
 const DESPAWN_Z = 10;
 
 export default function Obstacles({ speed, isPaused, playerState, laneWidth, onGameOver, onCoinCollect, onKeyCollect }: ObstaclesProps) {

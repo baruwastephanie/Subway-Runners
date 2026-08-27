@@ -10,9 +10,10 @@ interface UIProps {
   onPauseToggle: () => void;
   onRestart: () => void;
   onHome: () => void;
+  onEndGame: () => void;
 }
 
-export default function UI({ coins, keys, score, isPaused, gameOver, onPauseToggle, onRestart, onHome }: UIProps) {
+export default function UI({ coins, keys, score, isPaused, gameOver, onPauseToggle, onRestart, onHome, onEndGame }: UIProps) {
   return (
     <div className="absolute inset-0 pointer-events-none select-none">
       {/* Top UI */}
@@ -81,12 +82,20 @@ export default function UI({ coins, keys, score, isPaused, gameOver, onPauseTogg
 
       {/* Pause Screen */}
       {isPaused && !gameOver && (
-        <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-auto backdrop-blur-sm">
+        <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-8 pointer-events-auto backdrop-blur-sm">
           <button 
             onClick={onPauseToggle}
             className="w-24 h-24 bg-blue-500 hover:bg-blue-400 rounded-full border-8 border-white flex items-center justify-center shadow-2xl active:scale-95 transition-transform pl-2"
           >
             <Play fill="white" className="w-10 h-10 text-white" />
+          </button>
+
+          <button 
+            onClick={onEndGame}
+            className="px-8 py-4 bg-red-500 hover:bg-red-400 text-white rounded-2xl font-black text-xl shadow-[0_6px_0_rgb(185,28,28)] active:shadow-[0_0px_0_rgb(185,28,28)] active:translate-y-[6px] transition-all flex justify-center items-center gap-2"
+          >
+            <Home className="w-6 h-6" />
+            END GAME
           </button>
         </div>
       )}

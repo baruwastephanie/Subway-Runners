@@ -139,6 +139,25 @@ export default function App() {
     checkMissions(newTotalCoins, newTotalKeys, unlockedCharacters.length, missionStatus);
   };
 
+  const handleEndGame = () => {
+    // Same saving logic, but instead of Game Over overlay, we go home
+    const newHighScore = Math.max(Math.floor(score), highScore);
+    setHighScore(newHighScore);
+    localStorage.setItem('highScore', newHighScore.toString());
+    
+    const newTotalCoins = totalCoins + coins;
+    setTotalCoins(newTotalCoins);
+    localStorage.setItem('totalCoins', newTotalCoins.toString());
+
+    const newTotalKeys = totalKeys + keys;
+    setTotalKeys(newTotalKeys);
+    localStorage.setItem('totalKeys', newTotalKeys.toString());
+
+    checkMissions(newTotalCoins, newTotalKeys, unlockedCharacters.length, missionStatus);
+    
+    setAppPhase('home');
+  };
+
   const handleCollectReward = (missionId: string, reward: number) => {
     const newStatus = { ...missionStatus, [missionId]: 'collected' };
     setMissionStatus(newStatus as any);
@@ -282,6 +301,7 @@ export default function App() {
           onPauseToggle={() => setIsPaused(!isPaused)}
           onRestart={resetGame}
           onHome={() => setAppPhase('home')}
+          onEndGame={handleEndGame}
         />
       )}
     </div>
