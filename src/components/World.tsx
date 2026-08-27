@@ -137,28 +137,95 @@ function SceneryTile({ zOffset }: { zOffset: number }) {
   return (
     <group ref={groupRef}>
       {/* Left side houses */}
-      <House position={[-6, 0, -10]} />
-      <House position={[-6, 0, -30]} />
-      <House position={[-6, 0, -50]} />
+      <House position={[-8, 0, -10]} />
+      <House position={[-8, 0, -30]} />
+      <House position={[-8, 0, -50]} />
       
       {/* Right side houses */}
-      <House position={[6, 0, -20]} rotation={[0, Math.PI, 0]} />
-      <House position={[6, 0, -40]} rotation={[0, Math.PI, 0]} />
+      <House position={[8, 0, -20]} rotation={[0, Math.PI, 0]} />
+      <House position={[8, 0, -40]} rotation={[0, Math.PI, 0]} />
       
+      {/* Decorated Trees */}
+      <DecoratedTree position={[-5, 0, -5]} />
+      <DecoratedTree position={[5, 0, -15]} />
+      <DecoratedTree position={[-6, 0, -25]} />
+      <DecoratedTree position={[6, 0, -35]} />
+      <DecoratedTree position={[-5, 0, -45]} />
+      <DecoratedTree position={[5, 0, -55]} />
+
       {/* Presents */}
       <Present position={[-4, 0.5, -20]} color="#ef4444" ribbonColor="#fef08a" />
       <Present position={[-4.5, 0.5, -21]} color="#3b82f6" ribbonColor="#ef4444" />
       <Present position={[4.5, 0.5, -10]} color="#22c55e" ribbonColor="#ef4444" />
       <Present position={[4, 0.5, -30]} color="#eab308" ribbonColor="#ef4444" />
       
+      <Present position={[-4.2, 0.5, -6]} color="#a855f7" ribbonColor="#22c55e" />
+      <Present position={[4.2, 0.5, -16]} color="#ec4899" ribbonColor="#fef08a" />
+      <Present position={[-5.2, 0.5, -24]} color="#06b6d4" ribbonColor="#ef4444" />
+      <Present position={[5.2, 0.5, -36]} color="#f97316" ribbonColor="#3b82f6" />
+      
       {/* Festive Poles & Overhead Cables */}
       <Pole position={[-3.5, 0, -15]} />
       <Pole position={[3.5, 0, -15]} />
       <OverheadCables position={[0, 5, -15]} />
-
       <Pole position={[-3.5, 0, -45]} />
       <Pole position={[3.5, 0, -45]} />
       <OverheadCables position={[0, 5, -45]} />
+    </group>
+  );
+}
+
+function DecoratedTree(props: any) {
+  return (
+    <group {...props}>
+      {/* Trunk */}
+      <mesh position={[0, 0.5, 0]} castShadow>
+        <cylinderGeometry args={[0.2, 0.3, 1]} />
+        <meshStandardMaterial color="#5c4033" />
+      </mesh>
+      {/* Leaves / Branches */}
+      <mesh position={[0, 1.5, 0]} castShadow>
+        <coneGeometry args={[1.5, 2, 8]} />
+        <meshStandardMaterial color="#0f5132" />
+      </mesh>
+      <mesh position={[0, 2.5, 0]} castShadow>
+        <coneGeometry args={[1.2, 1.8, 8]} />
+        <meshStandardMaterial color="#146c43" />
+      </mesh>
+      <mesh position={[0, 3.5, 0]} castShadow>
+        <coneGeometry args={[0.9, 1.5, 8]} />
+        <meshStandardMaterial color="#198754" />
+      </mesh>
+      {/* Star */}
+      <mesh position={[0, 4.4, 0]} castShadow>
+        <octahedronGeometry args={[0.3]} />
+        <meshStandardMaterial color="#fbbf24" />
+      </mesh>
+      {/* Baubles */}
+      <mesh position={[0.7, 1.2, 0.7]} castShadow>
+        <sphereGeometry args={[0.15]} />
+        <meshStandardMaterial color="#ef4444" />
+      </mesh>
+      <mesh position={[-0.7, 1.4, -0.5]} castShadow>
+        <sphereGeometry args={[0.15]} />
+        <meshStandardMaterial color="#3b82f6" />
+      </mesh>
+      <mesh position={[0.5, 2.2, -0.4]} castShadow>
+        <sphereGeometry args={[0.15]} />
+        <meshStandardMaterial color="#fbbf24" />
+      </mesh>
+      <mesh position={[-0.4, 2.4, 0.6]} castShadow>
+        <sphereGeometry args={[0.15]} />
+        <meshStandardMaterial color="#ec4899" />
+      </mesh>
+      <mesh position={[0.3, 3.2, 0.3]} castShadow>
+        <sphereGeometry args={[0.12]} />
+        <meshStandardMaterial color="#8b5cf6" />
+      </mesh>
+      <mesh position={[-0.3, 3.3, -0.3]} castShadow>
+        <sphereGeometry args={[0.12]} />
+        <meshStandardMaterial color="#06b6d4" />
+      </mesh>
     </group>
   );
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Settings, Key, Star, Trophy, User, ShoppingCart, Calendar } from 'lucide-react';
 
 interface HomeScreenProps {
@@ -11,74 +11,89 @@ interface HomeScreenProps {
 }
 
 export default function HomeScreen({ totalCoins, totalKeys, highScore, onPlay, onMissionsClick, onMeClick }: HomeScreenProps) {
+  const [showComingSoon, setShowComingSoon] = useState(false);
+
   return (
-    <div 
-      className="absolute inset-0 z-50 flex flex-col justify-between p-4 cursor-pointer"
-      onClick={onPlay}
-    >
-      {/* Top Bar */}
-      <div className="flex items-center justify-between mt-2" onClick={e => e.stopPropagation()}>
-        {/* Resources container */}
-        <div className="flex gap-2 bg-black/30 backdrop-blur-sm px-3 py-2 rounded-full shadow-lg">
-          {/* Keys */}
-          <div className="flex items-center gap-1 bg-sky-900/60 rounded-full px-2 py-0.5 border border-sky-400">
-            <Key className="w-4 h-4 text-sky-300" />
-            <span className="text-white font-bold text-sm shadow-sm">{totalKeys.toLocaleString()}</span>
-          </div>
-          {/* Coins */}
-          <div className="flex items-center gap-1 bg-amber-900/60 rounded-full px-2 py-0.5 border border-amber-400">
-            <div className="w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center">
-              <Star className="w-3 h-3 text-white fill-white" />
+    <>
+      <div 
+        className={`absolute inset-0 z-50 flex flex-col justify-between p-4 cursor-pointer transition-all duration-300 ${showComingSoon ? 'blur-md pointer-events-none' : ''}`}
+        onClick={onPlay}
+      >
+        {/* Top Bar */}
+        <div className="flex items-center justify-between mt-2" onClick={e => e.stopPropagation()}>
+          {/* Resources container */}
+          <div className="flex gap-2 bg-black/30 backdrop-blur-sm px-3 py-2 rounded-full shadow-lg">
+            {/* Keys */}
+            <div className="flex items-center gap-1 bg-sky-900/60 rounded-full px-2 py-0.5 border border-sky-400">
+              <Key className="w-4 h-4 text-sky-300" />
+              <span className="text-white font-bold text-sm shadow-sm">{totalKeys.toLocaleString()}</span>
             </div>
-            <span className="text-white font-bold text-sm shadow-sm">{totalCoins.toLocaleString()}</span>
-            <div className="w-4 h-4 bg-lime-500 rounded-full flex items-center justify-center text-white text-xs font-black ml-1 leading-none shadow-sm pb-0.5">+</div>
+            {/* Coins */}
+            <div className="flex items-center gap-1 bg-amber-900/60 rounded-full px-2 py-0.5 border border-amber-400">
+              <div className="w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center">
+                <Star className="w-3 h-3 text-white fill-white" />
+              </div>
+              <span className="text-white font-bold text-sm shadow-sm">{totalCoins.toLocaleString()}</span>
+              <div className="w-4 h-4 bg-lime-500 rounded-full flex items-center justify-center text-white text-xs font-black ml-1 leading-none shadow-sm pb-0.5">+</div>
+            </div>
+          </div>
+          {/* Right side: Multiplier and Settings */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1">
+              <span className="text-amber-400 font-black text-xl drop-shadow-md">x2</span>
+              <Star className="w-8 h-8 text-amber-400 fill-amber-400 drop-shadow-md" />
+            </div>
+            <button className="text-white drop-shadow-md hover:scale-110 transition-transform">
+              <Settings className="w-8 h-8 drop-shadow-md" />
+            </button>
           </div>
         </div>
 
-        {/* Right side: Multiplier and Settings */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1">
-            <span className="text-amber-400 font-black text-xl drop-shadow-md">x2</span>
-            <Star className="w-8 h-8 text-amber-400 fill-amber-400 drop-shadow-md" />
+        {/* High Score Box */}
+        <div className="self-start mt-6 bg-black/40 backdrop-blur-sm rounded-2xl flex items-center overflow-hidden border border-white/20 shadow-xl" onClick={e => e.stopPropagation()}>
+          <div className="bg-white/20 p-2">
+            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center">
+              <User className="w-8 h-8 text-sky-600" />
+            </div>
           </div>
-          <button className="text-white drop-shadow-md hover:scale-110 transition-transform">
-            <Settings className="w-8 h-8 drop-shadow-md" />
-          </button>
-        </div>
-      </div>
-
-      {/* High Score Box */}
-      <div className="self-start mt-6 bg-black/40 backdrop-blur-sm rounded-2xl flex items-center overflow-hidden border border-white/20 shadow-xl" onClick={e => e.stopPropagation()}>
-        <div className="bg-white/20 p-2">
-          <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center">
-            <User className="w-8 h-8 text-sky-600" />
+          <div className="px-4 py-2">
+            <div className="text-white/80 font-bold text-xs uppercase tracking-wide">High Score</div>
+            <div className="text-white font-black text-xl drop-shadow-md">{highScore.toLocaleString()}</div>
           </div>
         </div>
-        <div className="px-4 py-2">
-          <div className="text-white/80 font-bold text-xs uppercase tracking-wide">High Score</div>
-          <div className="text-white font-black text-xl drop-shadow-md">{highScore.toLocaleString()}</div>
+
+        <div className="flex-1 flex items-center justify-center pointer-events-none">
+          {/* Invisible spacer so the text is pushed down a bit but not to the very bottom */}
+        </div>
+
+        {/* Tap to Play Text */}
+        <div className="text-center mb-8 pointer-events-none">
+          <h1 className="text-white text-4xl font-black drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] animate-bounce">
+            Tap to Play
+          </h1>
+        </div>
+
+        {/* Bottom Nav */}
+        <div className="flex justify-between items-end gap-2 px-2 pb-2" onClick={e => e.stopPropagation()}>
+          <NavButton icon={<Trophy />} label="Missions" badge="1" onClick={onMissionsClick} />
+          <NavButton icon={<User />} label="Me" badge="2" onClick={onMeClick} />
+          <NavButton icon={<ShoppingCart />} label="Shop" badge="2" onClick={() => setShowComingSoon(true)} />
+          <NavButton icon={<Calendar />} label="Events" onClick={() => setShowComingSoon(true)} />
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center pointer-events-none">
-        {/* Invisible spacer so the text is pushed down a bit but not to the very bottom */}
-      </div>
-
-      {/* Tap to Play Text */}
-      <div className="text-center mb-8 pointer-events-none">
-        <h1 className="text-white text-4xl font-black drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] animate-bounce">
-          Tap to Play
-        </h1>
-      </div>
-
-      {/* Bottom Nav */}
-      <div className="flex justify-between items-end gap-2 px-2 pb-2" onClick={e => e.stopPropagation()}>
-        <NavButton icon={<Trophy />} label="Missions" badge="1" onClick={onMissionsClick} />
-        <NavButton icon={<User />} label="Me" badge="2" onClick={onMeClick} />
-        <NavButton icon={<ShoppingCart />} label="Shop" badge="2" />
-        <NavButton icon={<Calendar />} label="Events" />
-      </div>
-    </div>
+      {showComingSoon && (
+        <div 
+          className="absolute inset-0 z-[60] flex items-center justify-center bg-black/40 cursor-pointer backdrop-blur-sm"
+          onClick={() => setShowComingSoon(false)}
+        >
+          <div className="bg-white px-8 py-6 rounded-3xl shadow-2xl border-4 border-blue-500 animate-bounce flex flex-col items-center pointer-events-none">
+            <h2 className="text-3xl font-black text-slate-800 drop-shadow-sm uppercase text-center">Coming Soon!</h2>
+            <p className="text-slate-500 font-bold mt-2 text-center text-sm">We're working hard on this feature.<br/>Stay tuned!</p>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
