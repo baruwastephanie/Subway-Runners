@@ -54,6 +54,14 @@ function GameLoop({ isPaused, characterId, onGameOver, onCoinCollect, onKeyColle
       onScoreUpdate(scoreRef.current);
       lastScoreUpdate.current = state.clock.elapsedTime;
     }
+
+    // Smooth camera follow
+    const targetCameraX = playerState.current.lane * (LANE_WIDTH * 0.4);
+    state.camera.position.x = THREE.MathUtils.lerp(state.camera.position.x, targetCameraX, delta * 5);
+    
+    // Slight panning rotation to keep track centered
+    const targetCameraRotY = playerState.current.lane * 0.02;
+    state.camera.rotation.y = THREE.MathUtils.lerp(state.camera.rotation.y, targetCameraRotY, delta * 5);
   });
 
   return (
