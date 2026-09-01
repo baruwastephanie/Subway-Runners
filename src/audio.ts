@@ -8,8 +8,10 @@ class AudioEngine {
 
   setMuted(muted: boolean) {
     this.isMuted = muted;
-    if (this.bgmGain) {
-      this.bgmGain.gain.setTargetAtTime(muted ? 0 : 0.03, this.ctx ? this.ctx.currentTime : 0, 0.1);
+    if (this.bgmGain && this.ctx) {
+      try {
+        this.bgmGain.gain.setTargetAtTime(muted ? 0 : 0.03, this.ctx.currentTime, 0.1);
+      } catch (e) {}
     }
   }
 
@@ -44,24 +46,17 @@ class AudioEngine {
       osc.connect(gain);
       gain.connect(this.ctx.destination);
       
+      const now = this.ctx.currentTime;
       osc.type = 'sine';
-      const now = this.ctx.currentTime + 0.02; // Small lookahead
       osc.frequency.setValueAtTime(1200, now);
-      osc.frequency.exponentialRampToValueAtTime(2000, now + 0.1);
+      osc.frequency.setTargetAtTime(2000, now, 0.05); // Smooth exponential target
       
       gain.gain.setValueAtTime(0.1, now);
-      gain.gain.linearRampToValueAtTime(0, now + 0.15);
+      gain.gain.setTargetAtTime(0, now, 0.03); // Safest way to avoid clipping/errors
       
       osc.start(now);
       osc.stop(now + 0.15);
-      
-      osc.onended = () => {
-        osc.disconnect();
-        gain.disconnect();
-      };
-    } catch (e) {
-      // Ignore audio errors silently
-    }
+    } catch (e) {}
   }
 
   playKey() {
@@ -73,25 +68,17 @@ class AudioEngine {
       osc.connect(gain);
       gain.connect(this.ctx.destination);
       
+      const now = this.ctx.currentTime;
       osc.type = 'sine';
-      const now = this.ctx.currentTime + 0.02; // Small lookahead
-      // Bubble sound: fast frequency sweep up, slightly lower than coin
       osc.frequency.setValueAtTime(400, now);
-      osc.frequency.exponentialRampToValueAtTime(800, now + 0.15);
+      osc.frequency.setTargetAtTime(800, now, 0.05);
       
       gain.gain.setValueAtTime(0.2, now);
-      gain.gain.linearRampToValueAtTime(0, now + 0.15);
+      gain.gain.setTargetAtTime(0, now, 0.03);
       
       osc.start(now);
       osc.stop(now + 0.15);
-      
-      osc.onended = () => {
-        osc.disconnect();
-        gain.disconnect();
-      };
-    } catch (e) {
-      // Ignore audio errors silently
-    }
+    } catch (e) {}
   }
 
   playBGM() {
@@ -101,69 +88,63 @@ class AudioEngine {
     try {
       if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
       this.bgmGain = this.ctx.createGain();
-      this.bgmGain.gain.value = this.isMuted ? 0 : 0.03; // Master BGM volume - kept low so it's strictly background
+      this.bgmGain.gain.value = this.isMuted ? 0 : 0.03; 
       this.bgmGain.connect(this.ctx.destination);
       
-      // A simple repeating chord progression arpeggio (Am -> Dm)
       const notes = [
-        220.00, 261.63, 329.63, 261.63, // A3, C4, E4, C4
-        293.66, 349.23, 440.00, 349.23  // D4, F4, A4, F4
+        220.00, 261.63, 329.63, 261.63, 
+        293.66, 349.23, 440.00, 349.23  
       ];
       let noteIndex = 0;
-      
-      // Scheduling ahead is more robust than strict setTimeout to avoid jitter
       let nextNoteTime = this.ctx.currentTime + 0.1;
       
       const scheduleNotes = () => {
         if (!this.isPlayingBgm || !this.ctx || !this.bgmGain) return;
         
-        // CRITICAL FIX: If tab was suspended, setTimeout falls behind.
-        // Clamp nextNoteTime to be at least currentTime to prevent queuing thousands of notes instantly (which breaks the audio context)
-        if (nextNoteTime < this.ctx.currentTime) {
-          nextNoteTime = this.ctx.currentTime + 0.05;
+        try {
+          const now = this.ctx.currentTime;
+          // Reset timing if completely desynchronized (e.g. background tab)
+          if (nextNoteTime < now) {
+            nextNoteTime = now + 0.1;
+          }
+          
+          // Schedule 2.0 seconds ahead to survive extreme setTimeout throttling in background
+          while (nextNoteTime < now + 2.0) {
+            const osc = this.ctx.createOscillator();
+            const noteGain = this.ctx.createGain();
+            
+            osc.connect(noteGain);
+            noteGain.connect(this.bgmGain);
+            
+            osc.type = 'triangle';
+            osc.frequency.value = notes[noteIndex]; 
+            noteIndex = (noteIndex + 1) % notes.length;
+            
+            noteGain.gain.setValueAtTime(0, nextNoteTime);
+            noteGain.gain.setTargetAtTime(0.2, nextNoteTime, 0.01);
+            noteGain.gain.setTargetAtTime(0, nextNoteTime + 0.1, 0.05);
+            
+            osc.start(nextNoteTime);
+            osc.stop(nextNoteTime + 0.25);
+            
+            nextNoteTime += 0.25; 
+          }
+          
+          // Fire less frequently to save CPU, lookahead handles the rest
+          this.bgmInterval = window.setTimeout(scheduleNotes, 1000);
+        } catch (e) {
+          // Retry on next cycle if scheduling failed
+          this.bgmInterval = window.setTimeout(scheduleNotes, 1000);
         }
-        
-        // Schedule notes for the next 0.5 seconds
-        while (nextNoteTime < this.ctx.currentTime + 0.5) {
-          const osc = this.ctx.createOscillator();
-          const noteGain = this.ctx.createGain();
-          
-          osc.connect(noteGain);
-          noteGain.connect(this.bgmGain);
-          
-          osc.type = 'triangle';
-          const freq = notes[noteIndex];
-          noteIndex = (noteIndex + 1) % notes.length;
-          
-          osc.frequency.setValueAtTime(freq, nextNoteTime);
-          
-          noteGain.gain.setValueAtTime(0.2, nextNoteTime);
-          noteGain.gain.linearRampToValueAtTime(0, nextNoteTime + 0.2);
-          
-          osc.start(nextNoteTime);
-          osc.stop(nextNoteTime + 0.2);
-          
-          // Clean up to prevent memory leaks in some browsers
-          osc.onended = () => {
-            osc.disconnect();
-            noteGain.disconnect();
-          };
-          
-          nextNoteTime += 0.25; // 250ms per note
-        }
-        
-        this.bgmInterval = window.setTimeout(scheduleNotes, 100);
       };
       
       scheduleNotes();
-    } catch (e) {
-      // Ignore audio errors silently
-    }
+    } catch (e) {}
   }
 
   stopBGM() {
     this.isPlayingBgm = false;
-    if (this.bgmInterval) {
+    if (this.bgmInterval !== null) {
       clearTimeout(this.bgmInterval);
       this.bgmInterval = null;
     }
@@ -176,4 +157,9 @@ class AudioEngine {
   }
 }
 
-export const audioEngine = new AudioEngine();
+// Bind to window to prevent HMR / hot-reload from creating multiple contexts
+const globalAny = window as any;
+if (!globalAny.__audioEngine) {
+  globalAny.__audioEngine = new AudioEngine();
+}
+export const audioEngine = globalAny.__audioEngine;
